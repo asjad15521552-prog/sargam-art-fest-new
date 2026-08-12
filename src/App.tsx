@@ -218,6 +218,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'pc' | 'phone'>(typeof window !== 'undefined' && window.innerWidth > 768 ? 'pc' : 'phone');
   const [festivalName, setFestivalName] = useState('Sargam Art Fest');
   const [festivalYear, setFestivalYear] = useState('2026-27');
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
 
   // Update meta viewport based on viewMode
   useEffect(() => {
@@ -856,6 +857,7 @@ export default function App() {
         const data = docSnap.data();
         if (data.festivalName) setFestivalName(data.festivalName);
         if (data.festivalYear) setFestivalYear(data.festivalYear);
+        if (data.isRegistrationOpen !== undefined) setIsRegistrationOpen(data.isRegistrationOpen);
         if (data.adminPassword) {
           setSystemAdminPassword(data.adminPassword);
           setTempSystemPassword(data.adminPassword);
@@ -1325,6 +1327,11 @@ export default function App() {
   }, [isLoaded, programs]);
 
   const handleSaveBothTopics = (programId: string, line1: string, line2: string) => {
+    if (!isRegistrationOpen) {
+      showToast('Topic registration is currently deactivated by Admin.', 'error');
+      return;
+    }
+
     const prog = programs.find(p => p.id === programId);
     if (!prog) {
       showToast('Programme not found.', 'error');
@@ -4208,6 +4215,51 @@ export default function App() {
                           </div>
                           
                           <div className="space-y-4">
+                            {/* Public Registration Control (Student & Topic Registration) */}
+                            <div className="bg-stone-950 p-4 sm:p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-md">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                  <h5 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                    <Lock className="w-4 h-4 text-amber-400" />
+                                    Public Registration Status (Register Students & Register Topic)
+                                  </h5>
+                                  <p className="text-xs text-stone-400 mt-1">
+                                    Control whether Group Conveners / Students can submit new student registrations and topic registrations in the public view.
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className={`text-xs font-black px-3 py-1 rounded-full border ${
+                                    isRegistrationOpen 
+                                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                                      : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                  }`}>
+                                    {isRegistrationOpen ? 'ACTIVE' : 'DEACTIVATED'}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextState = !isRegistrationOpen;
+                                      setIsRegistrationOpen(nextState);
+                                      persistToFirestore({ isRegistrationOpen: nextState });
+                                      showToast(
+                                        nextState 
+                                          ? 'Registration Activated! Students & Topics can now be registered.' 
+                                          : 'Registration Deactivated! New registrations are disabled.', 
+                                        nextState ? 'success' : 'info'
+                                      );
+                                    }}
+                                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md ${
+                                      isRegistrationOpen
+                                        ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                    }`}
+                                  >
+                                    {isRegistrationOpen ? 'Deactivate Registration' : 'Activate Registration'}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
                             {/* View Song Registrations */}
                             <div className="bg-stone-950 p-4 rounded-xl border border-amber-500/20">
                               <h5 className="text-sm font-bold text-amber-300 mb-3 flex items-center gap-2">
@@ -7278,6 +7330,15 @@ export default function App() {
 
                         return (
                           <>
+                            {!isRegistrationOpen && (
+                              <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-bold mb-2">
+                                <Lock className="w-4 h-4 text-rose-400 shrink-0" />
+                                <span>
+                                  രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ വിദ്യാർത്ഥികളെയോ ടോപ്പിക്കുകളെയോ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല. (നിലവിലെ രജിസ്ട്രേഷനുകൾ താഴെയുള്ള സെർച്ച് ബാറുകളിൽ പ്രോഗ്രാം കോഡ് ടൈപ്പ് ചെയ്ത് കാണാവുന്നതാണ്.)
+                                </span>
+                              </div>
+                            )}
+
                             <div className="space-y-1">
                               <label className="text-xs font-bold text-amber-400 block">Programme Code</label>
                               <input
@@ -7363,7 +7424,12 @@ export default function App() {
                             </div>
                             
                             <button
+                              disabled={!isRegistrationOpen}
                               onClick={() => {
+                                 if (!isRegistrationOpen) {
+                                   showToast('Registration is currently deactivated by Admin.', 'error');
+                                   return;
+                                 }
                                  const p = activeProg || programs.find(pr => pr.code?.toUpperCase() === convenerProgramCode.trim().toUpperCase());
                                  if (!p) { showToast('Invalid Programme Code', 'error'); return; }
 
@@ -7477,9 +7543,13 @@ export default function App() {
                                    setConvenerStudentCodes([]);
                                  }
                               }}
-                              className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-amber-950 font-black rounded-xl transition-colors text-sm cursor-pointer"
+                              className={`w-full py-2.5 font-black rounded-xl transition-colors text-sm cursor-pointer shadow-md ${
+                                isRegistrationOpen
+                                  ? 'bg-amber-600 hover:bg-amber-500 text-amber-950'
+                                  : 'bg-stone-800 text-stone-500 cursor-not-allowed opacity-60'
+                              }`}
                             >
-                              Register Student(s)
+                              {isRegistrationOpen ? 'Register Student(s)' : '🔒 Registration Deactivated'}
                             </button>
                           </>
                         );
@@ -7607,16 +7677,25 @@ export default function App() {
 
                       <button
                         type="button"
+                        disabled={!isRegistrationOpen}
                         onClick={() => {
+                          if (!isRegistrationOpen) {
+                            showToast('Topic registration is currently deactivated by Admin.', 'error');
+                            return;
+                          }
                           const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode);
                           if (!p) { showToast('Invalid Programme Code', 'error'); return; }
                           if (!p.isSongEvent) { showToast('This programme does not require topic registration.', 'error'); return; }
                           
                           handleSaveBothTopics(p.id, convenerSongLine1, convenerSongLine2);
                         }}
-                        className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black rounded-xl transition-colors text-sm cursor-pointer shadow-lg shadow-amber-500/10"
+                        className={`w-full py-2.5 font-black rounded-xl transition-colors text-sm cursor-pointer shadow-lg ${
+                          isRegistrationOpen
+                            ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/10'
+                            : 'bg-stone-800 text-stone-500 cursor-not-allowed opacity-60'
+                        }`}
                       >
-                        Register Topics
+                        {isRegistrationOpen ? 'Register Topics' : '🔒 Topic Registration Deactivated'}
                       </button>
 
                       {/* Display registered topics for this team */}
