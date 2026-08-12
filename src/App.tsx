@@ -390,7 +390,7 @@ export default function App() {
   // Student Form State
   const [formCode, setFormCode] = useState('');
   const [formName, setFormName] = useState('');
-  const [formTeam, setFormTeam] = useState<TeamName>('Aqeeq');
+  const [formTeam, setFormTeam] = useState<TeamName>('Yaqoot');
   const [formCategory, setFormCategory] = useState<CategoryName>('Senior');
   const [formClass, setFormClass] = useState('1');
 
@@ -814,13 +814,27 @@ export default function App() {
     setIsGroupModalAddingStudent(false);
   };
 
+  const deleteStudentCascading = (codeToDelete: string) => {
+    const upperCode = codeToDelete.toUpperCase();
+    const updatedStudents = students.filter(s => s.code.toUpperCase() !== upperCode);
+    saveAndSetStudents(updatedStudents);
+
+    const updatedRegs = registrations.filter(r => r.studentCode.toUpperCase() !== upperCode);
+    if (updatedRegs.length !== registrations.length) {
+      saveAndSetRegistrations(updatedRegs);
+    }
+
+    if (editingCode === codeToDelete) {
+      resetForm();
+    }
+    if (groupModalEditingStudent && groupModalEditingStudent.code === codeToDelete) {
+      setGroupModalEditingStudent(null);
+    }
+    showToast('Information successfully removed.', 'success');
+  };
+
   const handleDeleteInlineStudent = (codeToDelete: string) => {
-    const updated = students.filter(s => s.code.toUpperCase() !== codeToDelete.toUpperCase());
-      saveAndSetStudents(updated);
-      showToast('Information successfully removed.', 'success');
-      if (groupModalEditingStudent && groupModalEditingStudent.code === codeToDelete) {
-        setGroupModalEditingStudent(null);
-      }
+    deleteStudentCascading(codeToDelete);
   };
 
   useEffect(() => {
@@ -912,19 +926,22 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // Auto-cleanup orphaned registrations and results for programs that no longer exist
+  // Auto-cleanup orphaned registrations and results for programs or students that no longer exist
   useEffect(() => {
     if (!isLoaded) return;
 
     const validProgIds = new Set(programs.map(p => p.id));
     const validProgNames = new Set(programs.map(p => p.name));
+    const validStudentCodes = new Set(students.map(s => s.code.toUpperCase()));
 
     let studentsChanged = false;
     let registrationsChanged = false;
     let songRegsChanged = false;
 
-    // 1. Clean orphaned registrations
-    const cleanedRegs = registrations.filter(r => validProgIds.has(r.programId));
+    // 1. Clean orphaned registrations (program missing or student missing)
+    const cleanedRegs = registrations.filter(r => 
+      validProgIds.has(r.programId) && validStudentCodes.has(r.studentCode.toUpperCase())
+    );
     if (cleanedRegs.length !== registrations.length) {
       registrationsChanged = true;
     }
@@ -992,7 +1009,7 @@ export default function App() {
     if (songRegsChanged) {
       saveAndSetSongRegistrations(cleanedSongRegs);
     }
-  }, [isLoaded, programs]);
+  }, [isLoaded, programs, students]);
   
   // Helper to persist to Firestore
   const persistToFirestore = (updates: any) => {
@@ -1733,7 +1750,11 @@ export default function App() {
       saveAndSetSongRegistrations(updatedSongRegs);
     }
 
-    // 4. Clean up results & points associated with this program from all students
+    // 4. Clean up print & simulator published program selections
+    saveAndSetPrintProgramIds(prev => prev.filter(pId => pId !== id));
+    saveAndSetSimPublishedProgramIds(prev => prev.filter(pId => pId !== id));
+
+    // 5. Clean up results & points associated with this program from all students
     const updatedStudents = students.map(st => {
       const hasResult = st.programResults?.some(r => {
         if (r.programId) return r.programId === id;
@@ -1757,6 +1778,12 @@ export default function App() {
         };
       }
       return st;
+    }).filter(st => {
+      // Remove dummy TEAM- students if their programResults become empty after deleting this program
+      if (st.code.startsWith('TEAM-') && (!st.programResults || st.programResults.length === 0)) {
+        return false;
+      }
+      return true;
     });
 
     saveAndSetStudents(updatedStudents);
@@ -1951,7 +1978,7 @@ export default function App() {
     setEditingCode(null);
     setFormCode('');
     setFormName('');
-    setFormTeam('Aqeeq');
+    setFormTeam('Yaqoot');
     setFormCategory('Senior');
     setFormClass('');
     setFormEvent('');
@@ -2410,12 +2437,7 @@ export default function App() {
 
   // Delete student entry
   const handleDeleteStudent = (codeToDelete: string) => {
-    const updated = students.filter(s => s.code.toUpperCase() !== codeToDelete.toUpperCase());
-    saveAndSetStudents(updated);
-    showToast('Information successfully removed.', 'success');
-    if (editingCode === codeToDelete) {
-      resetForm();
-    }
+    deleteStudentCascading(codeToDelete);
   };
 
   // Export data as JSON file
@@ -2648,14 +2670,16 @@ export default function App() {
     }
     
     if (clearConfirmState.action === 'clearResults') {
-      const updatedStudents = students.map(s => ({
-        ...s,
-        event: '',
-        rank: 0,
-        grade: '',
-        points: 0,
-        programResults: []
-      }));
+      const updatedStudents = students
+        .filter(s => !s.code.startsWith('TEAM-'))
+        .map(s => ({
+          ...s,
+          event: '',
+          rank: 0,
+          grade: '',
+          points: 0,
+          programResults: []
+        }));
       const updatedPrograms = programs.map(p => ({
         ...p,
         isResultPublished: false,
@@ -2663,19 +2687,36 @@ export default function App() {
       }));
       saveAndSetStudents(updatedStudents);
       saveAndSetPrograms(updatedPrograms);
+      saveAndSetSimPublishedProgramIds([]);
       showToast('All results cleared.', 'success');
     } else if (clearConfirmState.action === 'reset') {
       saveAndSetStudents(INITIAL_STUDENTS);
+      saveAndSetRegistrations([]);
+      saveAndSetSongRegistrations([]);
       showToast('Successfully reset to initial data.', 'success');
       resetForm();
     } else if (clearConfirmState.action === 'clearStudents') {
       saveAndSetStudents([]);
-      showToast('All data cleared.', 'success');
+      saveAndSetRegistrations([]);
+      saveAndSetSongRegistrations([]);
+      showToast('All student data & registrations cleared.', 'success');
       resetForm();
     } else if (clearConfirmState.action === 'clearPrograms') {
       saveAndSetPrograms([]);
       saveAndSetRegistrations([]);
-      showToast('All program data cleared.', 'success');
+      saveAndSetSongRegistrations([]);
+      saveAndSetPrintProgramIds([]);
+      saveAndSetSimPublishedProgramIds([]);
+      const cleanedStudents = students.map(s => ({
+        ...s,
+        event: '',
+        rank: 0,
+        grade: '',
+        points: 0,
+        programResults: []
+      })).filter(s => !s.code.startsWith('TEAM-'));
+      saveAndSetStudents(cleanedStudents);
+      showToast('All programme data, registrations & results cleared.', 'success');
     } else if (clearConfirmState.action === 'clearNotifications') {
       saveAndSetNotifications([]);
       showToast('All notifications cleared from all user devices.', 'success');
@@ -2913,14 +2954,17 @@ export default function App() {
 
   // 4. Student individual results filter & fast lookup maps
   const registrationsByStudentCode = useMemo(() => {
+    const validStudentCodes = new Set(students.map(s => s.code.toUpperCase()));
     const map: Record<string, {id: string, programId: string, studentCode: string}[]> = {};
     registrations.forEach(r => {
       const code = r.studentCode.toUpperCase();
-      if (!map[code]) map[code] = [];
-      map[code].push(r);
+      if (validStudentCodes.has(code)) {
+        if (!map[code]) map[code] = [];
+        map[code].push(r);
+      }
     });
     return map;
-  }, [registrations]);
+  }, [registrations, students]);
 
   const programsMap = useMemo(() => {
     const byId = new Map<string, Program>();
@@ -2964,9 +3008,12 @@ export default function App() {
 
   // Global memoized data for fast rendering
   const globalProgramsData = useMemo(() => {
+    const validStudentCodes = new Set(students.map(s => s.code.toUpperCase()));
     const regCount: Record<string, number> = {};
     registrations.forEach(r => {
-      regCount[r.programId] = (regCount[r.programId] || 0) + 1;
+      if (validStudentCodes.has(r.studentCode.toUpperCase())) {
+        regCount[r.programId] = (regCount[r.programId] || 0) + 1;
+      }
     });
 
     const progScorers: Record<string, { name: string, team: string, points: number, rank: number, class?: string, grade?: string, studentCode: string }[]> = {};

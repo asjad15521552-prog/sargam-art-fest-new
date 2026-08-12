@@ -25,44 +25,44 @@ export interface StudentResult {
 export type TeamName = 'Aqeeq' | 'Tawbaz' | 'Marjan' | 'Fyruz' | 'Yaqoot';
 export type CategoryName = 'Sub Junior' | 'Senior' | 'Super Senior' | 'General';
 
-export const TEAMS: TeamName[] = ['Aqeeq', 'Tawbaz', 'Marjan', 'Fyruz', 'Yaqoot'];
+export const TEAMS: TeamName[] = ['Yaqoot', 'Aqeeq', 'Tawbaz', 'Fyruz', 'Marjan'];
 export const CATEGORIES: CategoryName[] = ['Sub Junior', 'Senior', 'Super Senior', 'General'];
 
 export const TEAM_CODES: Record<TeamName, number> = {
-  Aqeeq: 100,
-  Tawbaz: 200,
-  Marjan: 300,
+  Yaqoot: 100,
+  Aqeeq: 200,
+  Tawbaz: 300,
   Fyruz: 400,
-  Yaqoot: 500
+  Marjan: 500
 };
 
 export const TEAM_RANGES: Record<TeamName, { min: number; max: number; label: string }> = {
-  Aqeeq: { min: 100, max: 199, label: '100 Series (100 - 199)' },
-  Tawbaz: { min: 200, max: 299, label: '200 Series (200 - 299)' },
-  Marjan: { min: 300, max: 399, label: '300 Series (300 - 399)' },
+  Yaqoot: { min: 100, max: 199, label: '100 Series (100 - 199)' },
+  Aqeeq: { min: 200, max: 299, label: '200 Series (200 - 299)' },
+  Tawbaz: { min: 300, max: 399, label: '300 Series (300 - 399)' },
   Fyruz: { min: 400, max: 499, label: '400 Series (400 - 499)' },
-  Yaqoot: { min: 500, max: 599, label: '500 Series (500 - 599)' }
+  Marjan: { min: 500, max: 599, label: '500 Series (500 - 599)' }
 };
 
 export function normalizeTeamName(rawTeam: string): TeamName {
-  if (!rawTeam) return 'Aqeeq';
+  if (!rawTeam) return 'Yaqoot';
   const t = rawTeam.trim().toLowerCase();
-  if (t.includes('aqeeq') || t === '100' || t.startsWith('10')) return 'Aqeeq';
-  if (t.includes('tawbaz') || t.includes('thawbaz') || t === '200' || t.startsWith('20')) return 'Tawbaz';
-  if (t.includes('marjan') || t === '300' || t.startsWith('30')) return 'Marjan';
+  if (t.includes('yaqoot') || t.includes('yaqooth') || t === '100' || t.startsWith('10')) return 'Yaqoot';
+  if (t.includes('aqeeq') || t === '200' || t.startsWith('20')) return 'Aqeeq';
+  if (t.includes('tawbaz') || t.includes('thawbaz') || t === '300' || t.startsWith('30')) return 'Tawbaz';
   if (t.includes('fyruz') || t.includes('fayrooz') || t.includes('fairouz') || t === '400' || t.startsWith('40')) return 'Fyruz';
-  if (t.includes('yaqoot') || t.includes('yaqooth') || t === '500' || t.startsWith('50')) return 'Yaqoot';
-  return 'Aqeeq';
+  if (t.includes('marjan') || t === '500' || t.startsWith('50')) return 'Marjan';
+  return 'Yaqoot';
 }
 
 export function getTeamFromChestNumber(code: string | number): TeamName | null {
   const num = parseInt(String(code).replace(/\D/g, ''), 10);
   if (isNaN(num)) return null;
-  if (num >= 100 && num <= 199) return 'Aqeeq';
-  if (num >= 200 && num <= 299) return 'Tawbaz';
-  if (num >= 300 && num <= 399) return 'Marjan';
+  if (num >= 100 && num <= 199) return 'Yaqoot';
+  if (num >= 200 && num <= 299) return 'Aqeeq';
+  if (num >= 300 && num <= 399) return 'Tawbaz';
   if (num >= 400 && num <= 499) return 'Fyruz';
-  if (num >= 500 && num <= 599) return 'Yaqoot';
+  if (num >= 500 && num <= 599) return 'Marjan';
   return null;
 }
 
@@ -89,11 +89,11 @@ export function getNextChestNumberForTeam(team: TeamName, existingStudents: { co
 
 // Team and category display names
 export const TEAM_MALAYALAM: Record<TeamName, string> = {
-  Aqeeq: 'Aqeeq (100)',
-  Tawbaz: 'Tawbaz (200)',
-  Marjan: 'Marjan (300)',
+  Yaqoot: 'Yaqoot (100)',
+  Aqeeq: 'Aqeeq (200)',
+  Tawbaz: 'Tawbaz (300)',
   Fyruz: 'Fyruz (400)',
-  Yaqoot: 'Yaqoot (500)'
+  Marjan: 'Marjan (500)'
 };
 
 export const CATEGORY_MALAYALAM: Record<CategoryName, string> = {
