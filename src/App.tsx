@@ -218,7 +218,8 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'pc' | 'phone'>(typeof window !== 'undefined' && window.innerWidth > 768 ? 'pc' : 'phone');
   const [festivalName, setFestivalName] = useState('Sargam Art Fest');
   const [festivalYear, setFestivalYear] = useState('2026-27');
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [isStudentRegistrationOpen, setIsStudentRegistrationOpen] = useState(true);
+  const [isTopicRegistrationOpen, setIsTopicRegistrationOpen] = useState(true);
 
   // Update meta viewport based on viewMode
   useEffect(() => {
@@ -270,11 +271,11 @@ export default function App() {
   const [formProgramMaxEntries, setFormProgramMaxEntries] = useState<number>(1);
   const [maxStagePrograms, setMaxStagePrograms] = useState(3);
   const [maxNonStagePrograms, setMaxNonStagePrograms] = useState(3);
-  const [categoryLimits, setCategoryLimits] = useState<Record<string, { maxStage: number; maxNonStage: number; maxGeneral?: number }>>({
-    'Sub Junior': { maxStage: 3, maxNonStage: 3, maxGeneral: 2 },
-    'Senior': { maxStage: 3, maxNonStage: 3, maxGeneral: 2 },
-    'Super Senior': { maxStage: 3, maxNonStage: 3, maxGeneral: 2 },
-    'General': { maxStage: 2, maxNonStage: 2, maxGeneral: 2 },
+  const [categoryLimits, setCategoryLimits] = useState<Record<string, { maxIndividual?: number; maxGeneral?: number; maxStage?: number; maxNonStage?: number }>>({
+    'Sub Junior': { maxIndividual: 4, maxGeneral: 2, maxStage: 4, maxNonStage: 4 },
+    'Senior': { maxIndividual: 4, maxGeneral: 2, maxStage: 4, maxNonStage: 4 },
+    'Super Senior': { maxIndividual: 4, maxGeneral: 2, maxStage: 4, maxNonStage: 4 },
+    'General': { maxIndividual: 2, maxGeneral: 2, maxStage: 2, maxNonStage: 2 },
   });
   const [activeTab, setActiveTab] = useState<'total' | 'category' | 'top3' | 'program'>('total');
   const [globalSearch, setGlobalSearch] = useState('');
@@ -857,7 +858,17 @@ export default function App() {
         const data = docSnap.data();
         if (data.festivalName) setFestivalName(data.festivalName);
         if (data.festivalYear) setFestivalYear(data.festivalYear);
-        if (data.isRegistrationOpen !== undefined) setIsRegistrationOpen(data.isRegistrationOpen);
+        if (data.isStudentRegistrationOpen !== undefined) {
+          setIsStudentRegistrationOpen(data.isStudentRegistrationOpen);
+        } else if (data.isRegistrationOpen !== undefined) {
+          setIsStudentRegistrationOpen(data.isRegistrationOpen);
+        }
+
+        if (data.isTopicRegistrationOpen !== undefined) {
+          setIsTopicRegistrationOpen(data.isTopicRegistrationOpen);
+        } else if (data.isRegistrationOpen !== undefined) {
+          setIsTopicRegistrationOpen(data.isRegistrationOpen);
+        }
         if (data.adminPassword) {
           setSystemAdminPassword(data.adminPassword);
           setTempSystemPassword(data.adminPassword);
@@ -1327,7 +1338,7 @@ export default function App() {
   }, [isLoaded, programs]);
 
   const handleSaveBothTopics = (programId: string, line1: string, line2: string) => {
-    if (!isRegistrationOpen) {
+    if (!isTopicRegistrationOpen) {
       showToast('Topic registration is currently deactivated by Admin.', 'error');
       return;
     }
@@ -1437,42 +1448,33 @@ export default function App() {
     // Limits check per student
     const studentRegs = registrations.filter(r => r.studentCode.toUpperCase() === student.code.toUpperCase());
     const programMap = new Map<string, Program>(programs.map(p => [p.id, p]));
-    let stageCount = 0;
-    let nonStageCount = 0;
+    let individualCount = 0;
     let generalCount = 0;
     studentRegs.forEach(reg => {
       const p = programMap.get(reg.programId);
       if (p) {
         if (p.category === 'General') {
           generalCount++;
-        } else if (p.type === 'Stage') {
-          stageCount++;
         } else {
-          nonStageCount++;
+          individualCount++;
         }
       }
     });
     
     const thisProgram = programs.find(p => p.id === programId);
+    const studentCategory = student.category || 'General';
+    const catLim = categoryLimits[studentCategory] || categoryLimits['General'] || { maxIndividual: 4, maxGeneral: 2 };
+    const maxIndividualLimit = catLim.maxIndividual ?? ((catLim.maxStage && catLim.maxNonStage) ? (catLim.maxStage + catLim.maxNonStage) : 4);
+    const maxGeneralLimit = catLim.maxGeneral ?? 2;
 
     if (category === 'General' || thisProgram?.category === 'General') {
-      const generalLimit = categoryLimits['General']?.maxGeneral ?? categoryLimits['General']?.maxStage ?? 2;
-      if (generalCount >= generalLimit) {
-        showToast(`Student (${student.name || student.code}) has reached maximum limit for General programs (${generalLimit}).`, 'error');
+      if (generalCount >= maxGeneralLimit) {
+        showToast(`Student (${student.name || student.code}) has reached maximum limit for General programmes (${maxGeneralLimit}).`, 'error');
         return;
       }
     } else {
-      const studentLimits = categoryLimits[student.category] || {
-        maxStage: maxStagePrograms,
-        maxNonStage: maxNonStagePrograms,
-      };
-      
-      if (type === 'Stage' && stageCount >= studentLimits.maxStage) {
-        showToast(`Student (${student.category}) has reached maximum limit for Stage programs (${studentLimits.maxStage}).`, 'error');
-        return;
-      }
-      if (type === 'Non-Stage' && nonStageCount >= studentLimits.maxNonStage) {
-        showToast(`Student (${student.category}) has reached maximum limit for Non-Stage programs (${studentLimits.maxNonStage}).`, 'error');
+      if (individualCount >= maxIndividualLimit) {
+        showToast(`Student (${student.name || student.code}) has reached maximum limit for Individual programmes (${maxIndividualLimit}).`, 'error');
         return;
       }
     }
@@ -3874,10 +3876,11 @@ export default function App() {
                                 <span className="text-[10px] text-amber-500/60 font-medium">Per Category</span>
                               </div>
                               <div className="space-y-3">
-                                {(['Sub Junior', 'Senior', 'Super Senior', 'General'] as const).map((cat) => {
-                                  const limits = categoryLimits[cat] || { maxStage: 3, maxNonStage: 3, maxGeneral: 2 };
-                                  const catMalayalam = CATEGORY_MALAYALAM[cat] || cat;
-                                  const isGeneral = cat === 'General';
+                                {(['Sub Junior', 'Senior', 'Super Senior'] as const).map((cat) => {
+                                  const limits = categoryLimits[cat] || { maxIndividual: 4, maxGeneral: 2 };
+                                  const maxIndividualVal = limits.maxIndividual ?? ((limits.maxStage && limits.maxNonStage) ? (limits.maxStage + limits.maxNonStage) : 4);
+                                  const maxGeneralVal = limits.maxGeneral ?? 2;
+
                                   return (
                                     <div key={cat} className="p-3 bg-stone-900/80 border border-amber-500/15 rounded-xl space-y-2">
                                       <div className="flex items-center justify-between">
@@ -3886,71 +3889,51 @@ export default function App() {
                                           {cat}
                                         </span>
                                       </div>
-                                      {isGeneral ? (
+                                      <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-1">
-                                          <label className="text-[10px] font-bold text-amber-400/80 block">General Limit</label>
+                                          <label className="text-[10px] font-bold text-amber-400/80 block">
+                                            Individual
+                                          </label>
                                           <input 
                                             type="number"
                                             min="1"
-                                            value={limits.maxGeneral ?? limits.maxStage ?? 2}
+                                            value={maxIndividualVal}
                                             onChange={(e) => {
                                               const val = Math.max(1, Number(e.target.value) || 1);
                                               const updated = {
                                                 ...categoryLimits,
-                                                'General': { maxStage: val, maxNonStage: val, maxGeneral: val }
+                                                [cat]: { ...limits, maxIndividual: val, maxGeneral: maxGeneralVal, maxStage: val, maxNonStage: val }
                                               };
                                               setCategoryLimits(updated);
-                                              persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+                                              persistToFirestore({ categoryLimits: updated });
                                             }}
                                             className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-xs text-amber-100 font-bold"
                                           />
                                         </div>
-                                      ) : (
-                                        <div className="grid grid-cols-2 gap-2">
-                                          <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-amber-400/80 block">Max Stage</label>
-                                            <input 
-                                              type="number"
-                                              min="1"
-                                              value={limits.maxStage}
-                                              onChange={(e) => {
-                                                const val = Math.max(1, Number(e.target.value) || 1);
-                                                const updated = {
-                                                  ...categoryLimits,
-                                                  [cat]: { ...limits, maxStage: val }
-                                                };
-                                                setCategoryLimits(updated);
-                                                persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
-                                              }}
-                                              className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-xs text-amber-100 font-bold"
-                                            />
-                                          </div>
-                                          <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-amber-400/80 block">Max Non-Stage</label>
-                                            <input 
-                                              type="number"
-                                              min="1"
-                                              value={limits.maxNonStage}
-                                              onChange={(e) => {
-                                                const val = Math.max(1, Number(e.target.value) || 1);
-                                                const updated = {
-                                                  ...categoryLimits,
-                                                  [cat]: { ...limits, maxNonStage: val }
-                                                };
-                                                setCategoryLimits(updated);
-                                                persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
-                                              }}
-                                              className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-xs text-amber-100 font-bold"
-                                            />
-                                          </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[10px] font-bold text-amber-400/80 block">
+                                            General
+                                          </label>
+                                          <input 
+                                            type="number"
+                                            min="1"
+                                            value={maxGeneralVal}
+                                            onChange={(e) => {
+                                              const val = Math.max(1, Number(e.target.value) || 1);
+                                              const updated = {
+                                                ...categoryLimits,
+                                                [cat]: { ...limits, maxGeneral: val, maxIndividual: maxIndividualVal, maxStage: maxIndividualVal, maxNonStage: maxIndividualVal }
+                                              };
+                                              setCategoryLimits(updated);
+                                              persistToFirestore({ categoryLimits: updated });
+                                            }}
+                                            className="w-full px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-xs text-amber-100 font-bold"
+                                          />
                                         </div>
-                                      )}
+                                      </div>
                                     </div>
                                   );
                                 })}
-                                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                                  <p className="text-[11px] text-amber-300 font-medium">Team Limit: Max 2 students per team per programme (General category can be configured during programme creation).</p>
-                                </div>
                               </div>
                             </div>
 
@@ -4215,46 +4198,97 @@ export default function App() {
                           </div>
                           
                           <div className="space-y-4">
-                            {/* Public Registration Control (Student & Topic Registration) */}
-                            <div className="bg-stone-950 p-4 sm:p-5 rounded-2xl border border-amber-500/30 space-y-3 shadow-md">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div>
-                                  <h5 className="text-sm font-bold text-amber-300 flex items-center gap-2">
-                                    <Lock className="w-4 h-4 text-amber-400" />
-                                    Public Registration Status (Register Students & Register Topic)
-                                  </h5>
-                                  <p className="text-xs text-stone-400 mt-1">
-                                    Control whether Group Conveners / Students can submit new student registrations and topic registrations in the public view.
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-3 shrink-0">
-                                  <span className={`text-xs font-black px-3 py-1 rounded-full border ${
-                                    isRegistrationOpen 
-                                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                                      : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                  }`}>
-                                    {isRegistrationOpen ? 'ACTIVE' : 'DEACTIVATED'}
-                                  </span>
+                            {/* Public Registration Controls (Separate Student & Topic controls) */}
+                            <div className="space-y-3">
+                              <h5 className="text-xs font-bold text-amber-400/80 uppercase tracking-wider flex items-center gap-2">
+                                <Lock className="w-4 h-4 text-amber-400" />
+                                Public Registration Activation Controls
+                              </h5>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* 1. Student Registration Control */}
+                                <div className="bg-stone-950 p-4.5 rounded-2xl border border-amber-500/30 space-y-3 shadow-md flex flex-col justify-between">
+                                  <div>
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                      <h6 className="text-sm font-bold text-amber-300 flex items-center gap-1.5">
+                                        <Users className="w-4 h-4 text-amber-400" />
+                                        Register Students
+                                      </h6>
+                                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                                        isStudentRegistrationOpen 
+                                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                                          : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                      }`}>
+                                        {isStudentRegistrationOpen ? 'ACTIVE' : 'DEACTIVATED'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-stone-400">
+                                      Control whether Group Conveners / Students can submit new student registrations in programmes.
+                                    </p>
+                                  </div>
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      const nextState = !isRegistrationOpen;
-                                      setIsRegistrationOpen(nextState);
-                                      persistToFirestore({ isRegistrationOpen: nextState });
+                                      const nextState = !isStudentRegistrationOpen;
+                                      setIsStudentRegistrationOpen(nextState);
+                                      persistToFirestore({ isStudentRegistrationOpen: nextState });
                                       showToast(
                                         nextState 
-                                          ? 'Registration Activated! Students & Topics can now be registered.' 
-                                          : 'Registration Deactivated! New registrations are disabled.', 
+                                          ? 'Student Registration Activated! Students can now be registered.' 
+                                          : 'Student Registration Deactivated!', 
                                         nextState ? 'success' : 'info'
                                       );
                                     }}
-                                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md ${
-                                      isRegistrationOpen
+                                    className={`w-full py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md ${
+                                      isStudentRegistrationOpen
                                         ? 'bg-rose-600 hover:bg-rose-500 text-white'
                                         : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                                     }`}
                                   >
-                                    {isRegistrationOpen ? 'Deactivate Registration' : 'Activate Registration'}
+                                    {isStudentRegistrationOpen ? 'Deactivate Student Registration' : 'Activate Student Registration'}
+                                  </button>
+                                </div>
+
+                                {/* 2. Topic Registration Control */}
+                                <div className="bg-stone-950 p-4.5 rounded-2xl border border-amber-500/30 space-y-3 shadow-md flex flex-col justify-between">
+                                  <div>
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                      <h6 className="text-sm font-bold text-amber-300 flex items-center gap-1.5">
+                                        <Flame className="w-4 h-4 text-amber-400" />
+                                        Register Topic
+                                      </h6>
+                                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                                        isTopicRegistrationOpen 
+                                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                                          : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                      }`}>
+                                        {isTopicRegistrationOpen ? 'ACTIVE' : 'DEACTIVATED'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-stone-400">
+                                      Control whether Group Conveners / Students can submit topic entries for topic events.
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextState = !isTopicRegistrationOpen;
+                                      setIsTopicRegistrationOpen(nextState);
+                                      persistToFirestore({ isTopicRegistrationOpen: nextState });
+                                      showToast(
+                                        nextState 
+                                          ? 'Topic Registration Activated! Topics can now be registered.' 
+                                          : 'Topic Registration Deactivated!', 
+                                        nextState ? 'success' : 'info'
+                                      );
+                                    }}
+                                    className={`w-full py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md ${
+                                      isTopicRegistrationOpen
+                                        ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                                        : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                    }`}
+                                  >
+                                    {isTopicRegistrationOpen ? 'Deactivate Topic Registration' : 'Activate Topic Registration'}
                                   </button>
                                 </div>
                               </div>
@@ -7330,11 +7364,11 @@ export default function App() {
 
                         return (
                           <>
-                            {!isRegistrationOpen && (
+                            {!isStudentRegistrationOpen && (
                               <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-bold mb-2">
                                 <Lock className="w-4 h-4 text-rose-400 shrink-0" />
                                 <span>
-                                  രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ വിദ്യാർത്ഥികളെയോ ടോപ്പിക്കുകളെയോ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല. (നിലവിലെ രജിസ്ട്രേഷനുകൾ താഴെയുള്ള സെർച്ച് ബാറുകളിൽ പ്രോഗ്രാം കോഡ് ടൈപ്പ് ചെയ്ത് കാണാവുന്നതാണ്.)
+                                  വിദ്യാർത്ഥി രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ വിദ്യാർത്ഥികളെ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല. (നിലവിലെ രജിസ്ട്രേഷനുകൾ താഴെ പ്രോഗ്രാം കോഡ് ടൈപ്പ് ചെയ്ത് കാണാവുന്നതാണ്.)
                                 </span>
                               </div>
                             )}
@@ -7424,10 +7458,10 @@ export default function App() {
                             </div>
                             
                             <button
-                              disabled={!isRegistrationOpen}
+                              disabled={!isStudentRegistrationOpen}
                               onClick={() => {
-                                 if (!isRegistrationOpen) {
-                                   showToast('Registration is currently deactivated by Admin.', 'error');
+                                 if (!isStudentRegistrationOpen) {
+                                   showToast('Student registration is currently deactivated by Admin.', 'error');
                                    return;
                                  }
                                  const p = activeProg || programs.find(pr => pr.code?.toUpperCase() === convenerProgramCode.trim().toUpperCase());
@@ -7476,40 +7510,32 @@ export default function App() {
 
                                    const studentRegs = updatedRegs.filter(r => r.studentCode.toUpperCase() === s.code.toUpperCase());
                                    const programMap = new Map<string, Program>(programs.map(pr => [pr.id, pr]));
-                                   let stageCount = 0;
-                                   let nonStageCount = 0;
+                                   let individualCount = 0;
                                    let generalCount = 0;
                                    studentRegs.forEach(reg => {
                                      const pr = programMap.get(reg.programId);
                                      if (pr) {
                                        if (pr.category === 'General') {
                                          generalCount++;
-                                       } else if (pr.type === 'Stage') {
-                                         stageCount++;
                                        } else {
-                                         nonStageCount++;
+                                         individualCount++;
                                        }
                                      }
                                    });
 
+                                   const studentCategory = s.category || 'General';
+                                   const catLim = categoryLimits[studentCategory] || categoryLimits['General'] || { maxIndividual: 4, maxGeneral: 2 };
+                                   const maxIndividualLimit = catLim.maxIndividual ?? ((catLim.maxStage && catLim.maxNonStage) ? (catLim.maxStage + catLim.maxNonStage) : 4);
+                                   const maxGeneralLimit = catLim.maxGeneral ?? 2;
+
                                    if (p.category === 'General') {
-                                     const generalLimit = categoryLimits['General']?.maxGeneral ?? categoryLimits['General']?.maxStage ?? 2;
-                                     if (generalCount >= generalLimit) {
-                                       showToast(`Student ${s.name} has reached max General programme limit (${generalLimit}).`, 'error');
+                                     if (generalCount >= maxGeneralLimit) {
+                                       showToast(`Student ${s.name} has reached max General programme limit (${maxGeneralLimit}).`, 'error');
                                        return;
                                      }
                                    } else {
-                                     const studentLimits = categoryLimits[s.category] || {
-                                       maxStage: maxStagePrograms,
-                                       maxNonStage: maxNonStagePrograms,
-                                     };
-
-                                     if (p.type === 'Stage' && stageCount >= studentLimits.maxStage) {
-                                       showToast(`Student ${s.name} (${s.category}) has reached max Stage limit (${studentLimits.maxStage}).`, 'error');
-                                       return;
-                                     }
-                                     if (p.type === 'Non-Stage' && nonStageCount >= studentLimits.maxNonStage) {
-                                       showToast(`Student ${s.name} (${s.category}) has reached max Non-Stage limit (${studentLimits.maxNonStage}).`, 'error');
+                                     if (individualCount >= maxIndividualLimit) {
+                                       showToast(`Student ${s.name} (${studentCategory}) has reached max Individual programme limit (${maxIndividualLimit}).`, 'error');
                                        return;
                                      }
                                    }
@@ -7544,12 +7570,12 @@ export default function App() {
                                  }
                               }}
                               className={`w-full py-2.5 font-black rounded-xl transition-colors text-sm cursor-pointer shadow-md ${
-                                isRegistrationOpen
+                                isStudentRegistrationOpen
                                   ? 'bg-amber-600 hover:bg-amber-500 text-amber-950'
                                   : 'bg-stone-800 text-stone-500 cursor-not-allowed opacity-60'
                               }`}
                             >
-                              {isRegistrationOpen ? 'Register Student(s)' : '🔒 Registration Deactivated'}
+                              {isStudentRegistrationOpen ? 'Register Student(s)' : '🔒 Student Registration Deactivated'}
                             </button>
                           </>
                         );
@@ -7616,6 +7642,16 @@ export default function App() {
                         <Flame className="w-5 h-5 text-amber-50" />
                         <h4 className="text-md font-bold text-amber-300">Topic Registration</h4>
                       </div>
+
+                      {!isTopicRegistrationOpen && (
+                        <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-bold my-2">
+                          <Lock className="w-4 h-4 text-rose-400 shrink-0" />
+                          <span>
+                            ടോപ്പിക്ക് രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ ടോപ്പിക്കുകൾ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല.
+                          </span>
+                        </div>
+                      )}
+
                       <p className="text-xs text-stone-400">
                         First-come, first-serve. Enter the Programme Code, then enter Topic 1 and Topic 2 for your participants. If another team registers a topic first, it cannot be selected.
                       </p>
@@ -7677,9 +7713,9 @@ export default function App() {
 
                       <button
                         type="button"
-                        disabled={!isRegistrationOpen}
+                        disabled={!isTopicRegistrationOpen}
                         onClick={() => {
-                          if (!isRegistrationOpen) {
+                          if (!isTopicRegistrationOpen) {
                             showToast('Topic registration is currently deactivated by Admin.', 'error');
                             return;
                           }
@@ -7690,12 +7726,12 @@ export default function App() {
                           handleSaveBothTopics(p.id, convenerSongLine1, convenerSongLine2);
                         }}
                         className={`w-full py-2.5 font-black rounded-xl transition-colors text-sm cursor-pointer shadow-lg ${
-                          isRegistrationOpen
+                          isTopicRegistrationOpen
                             ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/10'
                             : 'bg-stone-800 text-stone-500 cursor-not-allowed opacity-60'
                         }`}
                       >
-                        {isRegistrationOpen ? 'Register Topics' : '🔒 Topic Registration Deactivated'}
+                        {isTopicRegistrationOpen ? 'Register Topics' : '🔒 Topic Registration Deactivated'}
                       </button>
 
                       {/* Display registered topics for this team */}
