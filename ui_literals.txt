@@ -1,0 +1,137 @@
+245: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+278: const [activeTab, setActiveTab] = useState<'total' | 'category' | 'top3' | 'program'>('total');
+280: const [publicSearchView, setPublicSearchView] = useState<'student' | 'program'>('student');
+293: const [adminTab, setAdminTab] = useState<'dashboard' | 'student_details' | 'result_publishing' | 'program_details' | 'settings' | 'student_list' | 'all_programs' | 'check_publish' | 'active_status' | 'printing'>('dashboard');
+327: const reg1 = songRegistrations.find(r => r.programId === p.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && (r.entryIndex === 1 || !r.entryIndex));
+328: const reg2 = songRegistrations.find(r => r.programId === p.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && r.entryIndex === 2);
+338: const [clearConfirmState, setClearConfirmState] = useState<{isOpen: boolean, action: 'reset' | 'clearStudents' | 'clearPrograms' | 'clearResults' | 'clearNotifications' | null, password: string, error: string}>({
+562: if (isProgramsListModalOpen) return 'programsListModal';
+564: if (isTeamProgramRegistrationOpen) return 'teamProgramRegistrationModal';
+586: key === 'programsListModal' ||
+588: key === 'teamProgramRegistrationModal'
+951: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === st.category || p.category === 'General' || st.category === 'General'));
+1299: showToast('Program not found.', 'error');
+1389: showToast(`A ${student.category} student cannot participate in a ${category} program.`, 'error');
+1395: showToast('Student is already registered for this program.', 'error');
+1420: if (category === 'General' || thisProgram?.category === 'General') {
+1423: showToast(`Student (${student.name || student.code}) has reached maximum limit for General programs (${generalLimit}).`, 'error');
+1433: showToast(`Student (${student.category}) has reached maximum limit for Stage programs (${studentLimits.maxStage}).`, 'error');
+1437: showToast(`Student (${student.category}) has reached maximum limit for Non-Stage programs (${studentLimits.maxNonStage}).`, 'error');
+1455: showToast(`Team ${student.team} has already reached the maximum limit (${teamLimit}) for this program.`, 'error');
+1606: showToast(`Successfully imported/updated ${newPrograms.length} programs!`, 'success');
+1608: showToast('No valid programs found in the file.', 'error');
+1684: showToast('Please enter a valid Program Code or Name to schedule', 'error');
+1699: showToast('Program schedule updated successfully!', 'success');
+1749: showToast(`Program "${progToDelete.name}" deleted along with registrations & results`, 'success');
+1774: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === student.category || p.category === 'General' || student.category === 'General'));
+1798: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+1819: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+1840: setActiveTab('program');
+2120: showToast('Invalid Program Code', 'error');
+2139: ...students.filter(s => s.event === selectedProgram.name && (s.category === selectedProgram.category || selectedProgram.category === 'General' || s.category === 'General')).map(s => s.code.toUpperCase())
+2168: showToast(`Student ${student.name} (${entry.code}) is NOT registered for ${selectedProgram.name}!`, 'error');
+2258: const id = `${studentCode}_${programName}`;
+2286: showToast('Invalid Program Code', 'error');
+2323: showToast(`Deleted all results for ${selectedProgram.name}`, 'success');
+2481: const eventIdx = getIdx(['event', 'program', 'item']);
+2617: setClearConfirmState({ isOpen: true, action: 'clearPrograms', password: '', error: '' });
+2659: } else if (clearConfirmState.action === 'clearPrograms') {
+2662: showToast('All program data cleared.', 'success');
+2961: const progObj = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+3214: <span>Programs</span>
+3222: <span>Program Schedule</span>
+3258: <span>Program Registration</span>
+3338: { id: 'program_details', label: 'Programs & Registrations' },
+3341: { id: 'all_programs', label: 'All Programs' },
+3487: <label className="text-xs font-bold text-amber-400 block mb-1">Select Program</label>
+3496: if (e.target.value === '') setResultPublishProgramId('');
+3529: className={`px-4 py-2 text-sm cursor-pointer hover:bg-stone-800 transition-colors ${resultPublishProgramId === p.id ? 'bg-amber-500/10 text-amber-300 font-bold' : 'text-amber-100'}`}
+3539: <div className="px-4 py-3 text-sm text-stone-500 text-center">No programs found</div>
+3595: {prog.category === 'General' ? 'Team event / General category. Select a registered team or student below.' : '⚠️ No participants registered for this program yet. Register participants in "Programs & Registrations" tab.'}
+3696: if (st && !isReg) return <p className="text-[10px] text-rose-400 font-medium">✕ Student {st.name} is NOT registered for this program!</p>;
+3723: className={`flex-1 py-3 font-black rounded-xl transition-colors shadow-md text-sm border cursor-pointer ${confirmDeleteProgramId === resultPublishProgramId ? 'bg-rose-600 text-white border-rose-500' : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'}`}
+3742: )}                      {adminTab === 'program_details' && (
+3751: <p className="text-amber-500/70 text-sm">Manage programs, program limits, and register students.</p>
+3791: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3811: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3829: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3840: <p className="text-[11px] text-amber-300 font-medium">Team Limit: Max 2 students per team per program (General category can be configured during program creation).</p>
+3848: <h5 className="font-bold text-amber-400">Add New Program</h5>
+3873: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Code</label>
+3884: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Name</label>
+3900: <label key={cat} className={`flex items-center justify-center text-center p-2 rounded-lg border cursor-pointer transition-colors ${formProgramCategory === cat ? 'bg-amber-500/20 border-amber-500 text-stone-400' : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-amber-500/50'}`}>
+3903: name="programCategorySelection"
+3906: onChange={(e) => setFormProgramCategory(e.target.value as 'Sub Junior' | 'Senior' | 'Super Senior' | 'General')}
+3915: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Type</label>
+3918: <label key={type} className={`flex items-center justify-center text-center p-2 rounded-lg border cursor-pointer transition-colors ${formProgramType === type ? 'bg-amber-500/20 border-amber-500 text-stone-400' : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-amber-500/50'}`}>
+3921: name="programTypeSelection"
+3924: onChange={(e) => setFormProgramType(e.target.value as 'Stage' | 'Non-Stage')}
+3983: <h5 className="font-bold text-amber-300 text-lg">Program List & Registrations</h5>
+4006: <h4 className="text-lg font-black text-amber-300 mb-4 pb-2 border-b border-amber-500/10">{category} Programs</h4>
+4052: title="Delete Program"
+4122: <span className="text-xs font-bold text-stone-300">{p?.name || 'Unknown Program'}</span>
+4148: const progName = p?.name || 'Program';
+4151: `Your topic "${reg.songLine}" registered by team ${reg.team} for program "${progName}" has been rejected. Please submit a new topic.`,
+4407: <h4 className="text-sm font-bold text-amber-300">Program Scheduling</h4>
+4412: <label className="text-xs font-bold text-amber-400 block">Type Program Code or Name</label>
+4416: list="schedule-program-datalist"
+4419: placeholder="Type Program Code (e.g. P001, P002) or Name..."
+4422: <datalist id="schedule-program-datalist">
+4573: <span>Clear All Programs</span>
+4682: <th className="px-4 py-3 rounded-tl-xl w-32">Program Code</th>
+4683: <th className="px-4 py-3">Program Name</th>
+4837: <p className="text-xs text-stone-500 italic">No published programs</p>
+4877: <p className="text-xs text-stone-500 italic">No programs enabled for printing</p>
+4912: <label className="font-bold text-sm">Select Program to Add:</label>
+4930: <option value="">-- Select a Program --</option>
+5078: const title = `Program: ${prog.code ? `[${cleanPDFText(prog.code)}] ` : ''}${cleanPDFText(prog.name)}`;
+5120: doc.text('No results found for this program.', 148, currentY + 3, { align: 'center' });
+5524: <label className="font-bold text-sm text-stone-700">Search Program Code / Name:</label>
+5553: <option value="">-- Select a Program --</option>
+5743: <div className="text-xs text-stone-400 italic">No registered students found for this program.</div>
+5812: <h3 className="text-2xl font-bold">Program: <span className="font-extrabold">{prog.code ? `[${prog.code}] ` : ''}{prog.name}</span></h3>
+5850: <div className="text-center font-bold text-gray-500 py-6 print:hidden">No results found for this program.</div>
+5860: <div>Page {pageIndex + 1} of {programChunks.length}</div>
+5870: {adminTab === 'all_programs' && (
+5892: <th className="p-3 font-bold">Program Name</th>
+6043: <th className="p-3" colSpan={2}>Programs & Results</th>
+6075: return <span className="text-stone-600 text-[10px] italic">No programs</span>;
+6430: id="tab-program-btn"
+6431: onClick={() => setActiveTab('program')}
+6433: activeTab === 'program'
+6438: <SearchCode className={`w-4 h-4 sm:w-5 sm:h-5 mb-1 shrink-0 transition-colors ${activeTab === 'program' ? 'text-amber-950' : 'text-amber-500/70'}`} />
+6556: {activeTab === 'program' && (
+6563: <h3 className="text-xl font-black text-amber-300">Search Results & Program Tables</h3>
+6564: <p className="text-sm text-amber-500/60">Search student individual results or view full program result tables</p>
+6579: onClick={() => setPublicSearchView('program')}
+6581: publicSearchView === 'program'
+6621: let res = student.programResults?.find(r => r.programId ? r.programId === p.id : (r.programName === p.name && (student.category === p.category || p.category === 'General')));
+6644: const p = r.programId ? programsMap.byId.get(r.programId) : (programsMap.byNameCat.get(`${r.programName}___${student.category}`) || programsMap.byNameCat.get(`${r.programName}___General`));
+6750: {publicSearchView === 'program' && (
+6757: placeholder="Type Program Code (e.g. 101) or Name..."
+6787: <option value="">-- Select a Program --</option>
+6830: <p className="text-amber-500/60 font-medium">No programs found matching your search.</p>
+6997: {clearConfirmState.action === 'clearPrograms' && "Are you sure you want to clear all programs and registrations? This action cannot be undone."}
+6998: {clearConfirmState.action === 'clearResults' && "Are you sure you want to clear all program results? This action cannot be undone."}
+7079: <h3>Program Registration</h3>
+7177: <label className="text-xs font-bold text-amber-400 block">Program Code</label>
+7263: if (!p) { showToast('Invalid Program Code', 'error'); return; }
+7297: showToast(`Student ${s.name} (${s.category}) cannot participate in ${p.category} program.`, 'error');
+7327: showToast(`Student ${s.name} has reached max General program limit (${generalLimit}).`, 'error');
+7405: {currentProgram ? `Registered Students - ${currentProgram.name} [${currentProgram.code}]` : 'Registered Students for Program'}
+7413: <p className="text-xs text-stone-500 italic py-1">Type a Program Code above to view registered students for that program.</p>
+7415: <p className="text-xs text-amber-500/70 italic py-1">Program code "{typedCode}" not found.</p>
+7417: <p className="text-xs text-stone-500 italic py-1">No students registered yet for {currentProgram.name} in {teamRegistrationSelectedTeam}.</p>
+7424: <span className="font-mono text-amber-400 font-extrabold">[{pr?.code || 'N/A'}]</span> {pr?.name || 'Program'}
+7449: <label className="text-xs font-bold text-amber-400 block">Program Code (Topic Events)</label>
+7471: const reg1 = songRegistrations.find(r => r.programId === p?.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && (r.entryIndex === 1 || !r.entryIndex));
+7489: const reg2 = songRegistrations.find(r => r.programId === p?.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && r.entryIndex === 2);
+7507: if (!p) { showToast('Invalid Program Code', 'error'); return; }
+7508: if (!p.isSongEvent) { showToast('This program does not require topic registration.', 'error'); return; }
+7531: {p?.code ? `[${p.code}] ` : ''}{p?.name || 'Unknown Program'}
+7580: <h3>Programs List</h3>
+7582: <p className="text-xs text-amber-200/80 mb-4">View and search through all registered programs.</p>
+7607: <p className="text-sm">No programs found.</p>
+7666: <h3>Program Schedule</h3>
+7758: <p className="text-amber-200/80 font-bold">No programs scheduled yet.</p>
+7767: <p className="text-sm">No scheduled programs found matching your search.</p>

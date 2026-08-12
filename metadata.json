@@ -1,0 +1,8 @@
+{
+  "name": "Sargam Art Fest",
+  "description": "Sargam Art Fest 2026-27 score and results tracker application with real-time analytics, student searches, and admin controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "collections": [
+    {
+      "name": "students",
+      "description": "Student details and results",
+      "rules": "allow read, write: if true;",
+      "schema": {}
+    },
+    {
+      "name": "programs",
+      "description": "Program details",
+      "rules": "allow read, write: if true;",
+      "schema": {}
+    },
+    {
+      "name": "registrations",
+      "description": "Program registrations",
+      "rules": "allow read, write: if true;",
+      "schema": {}
+    },
+    {
+      "name": "settings",
+      "description": "Festival settings",
+      "rules": "allow read, write: if true;",
+      "schema": {}
+    }
+  ]
+}

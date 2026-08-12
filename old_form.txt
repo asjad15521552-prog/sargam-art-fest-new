@@ -1,0 +1,213 @@
+                      {adminTab === 'result_publishing' && (
+                        <form onSubmit={handleSaveResult} className="print:hidden bg-stone-900 border border-amber-500/20 p-5 rounded-2xl shadow-sm space-y-4">
+                          <div className="flex items-center justify-between border-b border-amber-500/10 pb-2">
+                            <h4 className="text-sm font-bold text-amber-300">
+                              Publish / Edit Result
+                            </h4>
+                            {editingCode && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleDeleteStudent(editingCode);
+                                  resetForm();
+                                }}
+                                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-colors border border-rose-500/20 flex items-center"
+                                title="Delete Student"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex gap-6 md:col-span-2 bg-stone-950 p-3 rounded-xl border border-amber-500/20">
+                              <label className="flex items-center gap-2 text-sm font-bold text-amber-200 cursor-pointer">
+                                <input 
+                                  type="radio" 
+                                  checked={formResultCategory !== 'General'} 
+                                  onChange={() => { setFormResultCategory('Sub Junior'); setFormCode(''); setFormName(''); setFormEvent(''); }} 
+                                  className="accent-amber-500 w-4 h-4" 
+                                />
+                                Individual Event
+                              </label>
+                              <label className="flex items-center gap-2 text-sm font-bold text-amber-200 cursor-pointer">
+                                <input 
+                                  type="radio" 
+                                  checked={formResultCategory === 'General'} 
+                                  onChange={() => { setFormResultCategory('General'); setFormCode(''); setFormName(''); setFormEvent(''); }} 
+                                  className="accent-amber-500 w-4 h-4" 
+                                />
+                                General (Group) Event
+                              </label>
+                            </div>
+
+                            {formResultCategory === 'General' ? (
+                                <div className="grid grid-cols-2 gap-4 md:col-span-2">
+                                  <div className="space-y-1">
+                                    <label className="text-xs font-bold text-amber-400 block">Team Name</label>
+                                    <select 
+                                      required
+                                      value={formTeam}
+                                      onChange={(e) => {
+                                        setFormTeam(e.target.value as TeamName);
+                                        setFormCode('TEAM-' + e.target.value);
+                                        setFormName(e.target.value + ' Group');
+                                      }}
+                                      className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                                    >
+                                      <option value="">-- Select Team --</option>
+                                      {TEAMS.map(team => (
+                                        <option key={team} value={team}>{team}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-xs font-bold text-amber-400 block">Entry Number</label>
+                                    <select 
+                                      value={formResultEntryIndex}
+                                      onChange={(e) => setFormResultEntryIndex(Number(e.target.value))}
+                                      className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                                    >
+                                      {[1,2,3,4,5].map(n => (
+                                        <option key={n} value={n}>Entry {n}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                            ) : (
+                                <>
+                                  <div className="space-y-1 md:col-span-2">
+                                    <label className="text-xs font-bold text-amber-400 block">Student Code (Select Student)</label>
+                                    <input 
+                                      list="student-datalist"
+                                      required
+                                      placeholder="Search by Code or Name..."
+                                      value={formCode}
+                                      onChange={(e) => {
+                                        setFormCode(e.target.value);
+                                        const s = students.find(st => st.code === e.target.value);
+                                        if (s) {
+                                          setFormName(s.name);
+                                          setFormTeam(s.team as TeamName);
+                                          setFormResultCategory((s.category as CategoryName) || 'General');
+                                          setFormEvent('');
+                                          setFormRank(0);
+                                          setFormGrade('');
+                                          setFormPoints(0);
+                                        } else {
+                                          setFormName('');
+                                          setFormEvent('');
+                                          setFormRank(0);
+                                          setFormGrade('');
+                                          setFormPoints(0);
+                                        }
+                                      }}
+                                      className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                                    />
+                                    <datalist id="student-datalist">
+                                      {students.filter(s => !s.code.startsWith('TEAM-')).map(s => (
+                                        <option key={s.code} value={s.code}>{s.name} ({s.team})</option>
+                                      ))}
+                                    </datalist>
+                                  </div>
+                                  
+                                  {/* Show Name if selected */}
+                                  {formCode && !formCode.startsWith('TEAM-') && (
+                                    <div className="md:col-span-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-lg mb-2 flex items-center justify-between">
+                                      <div>
+                                        Selected: <strong>{formName}</strong>
+                                      </div>
+                                      <div className="text-[10px] text-emerald-500/70 uppercase">
+                                        {students.find(s => s.code === formCode)?.category}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                            )}
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-amber-400 block">Competition Name</label>
+                              <select 
+                                required
+                                value={formEvent}
+                                onChange={(e) => {
+                                  const eventName = e.target.value;
+                                  setFormEvent(eventName);
+                                  const finalCodeCalc = formResultCategory === 'General' ? 'TEAM-' + formTeam + (formResultEntryIndex > 1 ? `-${formResultEntryIndex}` : '') : formCode;
+                                  const s = students.find(st => st.code.toUpperCase() === finalCodeCalc.trim().toUpperCase());
+                                  if (s) {
+                                    const pr = s.programResults?.find(r => r.programName === eventName);
+                                    if (pr) {
+                                      setFormRank(pr.rank || 0);
+                                      setFormGrade(pr.grade || '');
+                                      setFormPoints(pr.points || 0);
+                                    } else if (s.event === eventName) {
+                                      setFormRank(s.rank || 0);
+                                      setFormGrade(s.grade || '');
+                                      setFormPoints(s.points || 0);
+                                    } else {
+                                      setFormRank(0);
+                                      setFormGrade('');
+                                      setFormPoints(0);
+                                    }
+                                  }
+                                }}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                              >
+                                <option value="">-- Select Registered Competition --</option>
+                                {availablePrograms.map(p => (
+                                  <option key={p.id} value={p.name}>{p.code ? `[${p.code}] ` : ''}{p.name} ({p.type})</option>
+                                ))}
+                              </select>
+                              {availablePrograms.length === 0 && formCode && (
+                                <p className="text-[10px] text-rose-400 mt-1">No pending registrations found for this student/team.</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-amber-400 block">Rank</label>
+                              <select 
+                                value={formRank}
+                                onChange={(e) => setFormRank(Number(e.target.value))}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                              >
+                                <option value={0}>No Chance</option>
+                                <option value={1}>1st Rank</option>
+                                <option value={2}>2nd Rank</option>
+                                <option value={3}>3rd Rank</option>
+                              </select>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-amber-400 block">Grade</label>
+                              <select 
+                                value={formGrade}
+                                onChange={(e) => setFormGrade(e.target.value)}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-950 focus:border-amber-400 outline-none text-sm text-amber-100"
+                              >
+                                <option value="">No Grade</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                              </select>
+                            </div>
+
+                            <div className="space-y-1 md:col-span-2">
+                              <label className="text-xs font-bold text-amber-400 block">Points (Auto)</label>
+                              <input 
+                                readOnly
+                                type="number"
+                                value={formPoints}
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/20 bg-stone-900 outline-none text-sm text-amber-100 opacity-80"
+                              />
+                            </div>
+                          </div>
+
+                          <button 
+                            type="submit"
+                            className="w-full py-3 bg-amber-700 hover:bg-amber-600 text-amber-950 font-black rounded-xl transition-colors shadow-md text-sm cursor-pointer mt-4"
+                          >
+                            Publish Result
+                          </button>
+                        </form>
+                      )}

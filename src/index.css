@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manjari:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Manjari", ui-sans-serif, system-ui, sans-serif;
+  --font-malayalam: "Manjari", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-kerala-gold: #d4af37;
+  --color-kerala-bronze: #b68973;
+  --color-kerala-clay: #8b5a2b;
+  --color-kerala-wood: #5c3a21;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Base custom styles to enhance the aesthetic */
+body {
+  background-color: #0d0805; /* Advanced level dark luxury backdrop */
+  color: #f7f3ee;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#main-root-container {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* Custom scrollbars for nested containers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* Premium Animations */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05) rotate(180deg);
+  }
+}
+
+@keyframes float-medium {
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) scale(0.95) rotate(-180deg);
+  }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes gold-shine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-float-1 {
+  animation: float-slow 25s infinite ease-in-out;
+}
+
+.animate-float-2 {
+  animation: float-medium 20s infinite ease-in-out;
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 12s infinite ease-in-out;
+}
+
+/* Luxury gold text shine */
+.gold-shimmer {
+  background: linear-gradient(
+    to right,
+    #ffe29a 20%,
+    #d4af37 40%,
+    #f3e0aa 60%,
+    #d4af37 80%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: gold-shine 6s linear infinite;
+}
+
+/* Kerala Traditional Ornament Lattice Overlay */
+.cultural-grid {
+  background-image: 
+    radial-gradient(rgba(212, 175, 55, 0.08) 1.5px, transparent 1.5px), 
+    radial-gradient(rgba(139, 90, 43, 0.05) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+
+
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+  
+  .print-page-break {
+    page-break-before: always;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .cultural-grid,
+  .animate-float-1,
+  .animate-float-2,
+  .animate-pulse-gentle,
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Reset container styles */
+  #main-root-container {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+  }
+  
+  /* Print-friendly tables */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th, td {
+    border: 1px solid #ccc !important;
+    color: black !important;
+    background: transparent !important;
+  }
+  
+  /* Hide all buttons when printing */
+  button {
+    display: none !important;
+  }
+  
+  /* Universal text and background reset for printing */
+  body, #main-root-container, #root {
+    background-color: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  tr:nth-child(even), .print-zebra-even {
+    background-color: #e5e7eb !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  thead tr {
+    background-color: #d1d5db !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Update border colors for printable layout */
+  .border, .border-b, .border-t, .border-l, .border-r {
+    border-color: #ccc !important;
+  }
+  
+  /* Hide Admin floating buttons */
+  .fixed, .sticky {
+    position: static !important;
+    display: none !important;
+  }
+  
+  /* Keep leaderboard layout */
+  .bg-stone-950, .bg-stone-900, .bg-amber-500\/5, .bg-amber-500\/10 {
+    background: white !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(217 119 6 / 0.3); /* amber-600 with opacity */
+    border-radius: 20px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(217 119 6 / 0.6);
+  }
+}

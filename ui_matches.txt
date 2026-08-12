@@ -1,0 +1,748 @@
+55: import { StudentResult, TeamName, CategoryName, TEAMS, CATEGORIES, TEAM_MALAYALAM, CATEGORY_MALAYALAM, Program, ProgramCategory } from './types';
+68: function ProgramRegistrationForm({ program, students, registrations, onRegister, onUnregister }: {
+69: program: Program,
+79: const progRegs = registrations.filter(r => r.programId === program.id);
+94: {program.category === 'General' ? (
+110: Entry ({program.maxEntriesPerTeam || 1} allowed)
+117: {Array.from({ length: Math.max(1, program.maxEntriesPerTeam || 1) }).map((_, i) => (
+183: {program.category === 'General' && program.maxEntriesPerTeam && program.maxEntriesPerTeam > 1 && (
+238: const [programs, setPrograms] = useState<Program[]>([]);
+240: const programTeamPoints = useMemo(() => {
+243: if (s.programResults) {
+244: s.programResults.forEach(r => {
+245: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+257: }, [students, programs]);
+259: const [registrations, setRegistrations] = useState<{id: string, programId: string, studentCode: string}[]>([]);
+261: const [formProgramName, setFormProgramName] = useState('');
+262: const [formProgramCode, setFormProgramCode] = useState('');
+263: const [formProgramType, setFormProgramType] = useState<'Stage' | 'Non-Stage'>('Stage');
+264: const [formProgramIsSongEvent, setFormProgramIsSongEvent] = useState(false);
+265: const [formProgramDate, setFormProgramDate] = useState('');
+266: const [formProgramTime, setFormProgramTime] = useState('');
+267: const [formProgramCategory, setFormProgramCategory] = useState<'Sub Junior' | 'Senior' | 'Super Senior' | 'General'>('General');
+268: const [formProgramMaxParticipants, setFormProgramMaxParticipants] = useState<number>(5);
+269: const [formProgramMaxEntries, setFormProgramMaxEntries] = useState<number>(1);
+270: const [maxStagePrograms, setMaxStagePrograms] = useState(3);
+271: const [maxNonStagePrograms, setMaxNonStagePrograms] = useState(3);
+278: const [activeTab, setActiveTab] = useState<'total' | 'category' | 'top3' | 'program'>('total');
+280: const [publicSearchView, setPublicSearchView] = useState<'student' | 'program'>('student');
+281: const [publicProgramSearchQuery, setPublicProgramSearchQuery] = useState('');
+282: const [publicSelectedProgramId, setPublicSelectedProgramId] = useState('');
+293: const [adminTab, setAdminTab] = useState<'dashboard' | 'student_details' | 'result_publishing' | 'program_details' | 'settings' | 'student_list' | 'all_programs' | 'check_publish' | 'active_status' | 'printing'>('dashboard');
+294: const [adminAllProgramsSearchQuery, setAdminAllProgramsSearchQuery] = useState('');
+296: const [printProgramId, setPrintProgramId] = useState('');
+297: const [printProgramIds, setPrintProgramIds] = useState<string[]>([]);
+299: const [regPaperSelectedProgramId, setRegPaperSelectedProgramId] = useState('');
+305: // Team Program Registration State
+306: const [isTeamProgramRegistrationOpen, setIsTeamProgramRegistrationOpen] = useState(false);
+311: const [convenerProgramCode, setConvenerProgramCode] = useState('');
+314: const [convenerSongProgramCode, setConvenerSongProgramCode] = useState('');
+318: // Auto populate topic lines when program code or selected team changes
+320: if (!convenerSongProgramCode || !teamRegistrationSelectedTeam) {
+325: const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode.toUpperCase());
+327: const reg1 = songRegistrations.find(r => r.programId === p.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && (r.entryIndex === 1 || !r.entryIndex));
+328: const reg2 = songRegistrations.find(r => r.programId === p.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && r.entryIndex === 2);
+335: }, [convenerSongProgramCode, teamRegistrationSelectedTeam, songRegistrations, programs]);
+338: const [clearConfirmState, setClearConfirmState] = useState<{isOpen: boolean, action: 'reset' | 'clearStudents' | 'clearPrograms' | 'clearResults' | 'clearNotifications' | null, password: string, error: string}>({
+413: const [simRows, setSimRows] = useState<{id: string, programCode: string, selectedProgramId: string | null}[]>(
+416: programCode: '',
+417: selectedProgramId: null
+420: const [simPublishedProgramIds, setSimPublishedProgramIds] = useState<string[]>([]);
+423: const [resultPublishProgramId, setResultPublishProgramId] = useState('');
+425: const [programSearchQuery, setProgramSearchQuery] = useState('');
+441: if (!resultPublishProgramId) {
+445: const selectedProgram = programs.find(p => p.id === resultPublishProgramId);
+446: if (selectedProgram) {
+449: let res = s.programResults?.find(r => {
+450: if (r.programId) return r.programId === selectedProgram.id;
+451: return r.programName === selectedProgram.name && (s.category === selectedProgram.category || selectedProgram.category === 'General' || s.category === 'General');
+453: if (!res && s.event === selectedProgram.name && (s.category === selectedProgram.category || selectedProgram.category === 'General' || s.category === 'General')) {
+454: res = { programName: s.event, rank: s.rank, grade: s.grade, points: s.points };
+479: }, [resultPublishProgramId, programs, students, editingCode]);
+494: const [isProgramsListModalOpen, setIsProgramsListModalOpen] = useState(false);
+495: const [programsSearchQuery, setProgramsSearchQuery] = useState('');
+497: const [scheduleSelectedProgramId, setScheduleSelectedProgramId] = useState<string>('');
+498: const [scheduleProgramCodeInput, setScheduleProgramCodeInput] = useState<string>('');
+507: const programExcelFileInputRef = useRef<HTMLInputElement>(null);
+526: isProgramsListModalOpen,
+528: isTeamProgramRegistrationOpen,
+539: isProgramsListModalOpen,
+541: isTeamProgramRegistrationOpen,
+550: isProgramsListModalOpen,
+552: isTeamProgramRegistrationOpen,
+562: if (isProgramsListModalOpen) return 'programsListModal';
+564: if (isTeamProgramRegistrationOpen) return 'teamProgramRegistrationModal';
+573: isProgramsListModalOpen,
+575: isTeamProgramRegistrationOpen,
+586: key === 'programsListModal' ||
+588: key === 'teamProgramRegistrationModal'
+627: if (current.isProgramsListModalOpen) {
+628: setIsProgramsListModalOpen(false);
+635: if (current.isTeamProgramRegistrationOpen) {
+636: setIsTeamProgramRegistrationOpen(false);
+696: const selectedProg = programs.find(p => p.name === formEvent);
+716: }, [formRank, formGrade, formCategory, formEvent, programs, adminTab]);
+845: } else if (data.maxStagePrograms !== undefined || data.maxNonStagePrograms !== undefined) {
+846: const sLim = data.maxStagePrograms ?? 3;
+847: const nsLim = data.maxNonStagePrograms ?? 3;
+854: if (data.maxStagePrograms) setMaxStagePrograms(data.maxStagePrograms);
+855: if (data.maxNonStagePrograms) setMaxNonStagePrograms(data.maxNonStagePrograms);
+856: if (data.programs) setPrograms(data.programs);
+859: if (data.simPublishedProgramIds) setSimPublishedProgramIds(data.simPublishedProgramIds);
+860: if (data.printProgramIds) setPrintProgramIds(data.printProgramIds);
+901: // Auto-cleanup orphaned registrations and results for programs that no longer exist
+905: const validProgIds = new Set(programs.map(p => p.id));
+906: const validProgNames = new Set(programs.map(p => p.name));
+913: const cleanedRegs = registrations.filter(r => validProgIds.has(r.programId));
+919: const cleanedSongRegs = songRegistrations.filter(sr => validProgIds.has(sr.programId));
+928: let filteredResults = st.programResults || [];
+931: if (r.programId) return validProgIds.has(r.programId);
+932: if (r.programName) return validProgNames.has(r.programName);
+951: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === st.category || p.category === 'General' || st.category === 'General'));
+958: programResults: filteredResults,
+981: }, [isLoaded, programs]);
+1252: const saveAndSetSimPublishedProgramIds = (action: string[] | ((prev: string[]) => string[])) => {
+1253: setSimPublishedProgramIds(prev => {
+1255: persistToFirestore({ simPublishedProgramIds: updated });
+1260: const saveAndSetPrintProgramIds = (action: string[] | ((prev: string[]) => string[])) => {
+1261: setPrintProgramIds(prev => {
+1263: persistToFirestore({ printProgramIds: updated });
+1276: // Synchronize simRows selectedProgramId when programs load
+1278: if (!isLoaded || !programs.length) return;
+1282: if (r.programCode) {
+1283: const p = programs.find(prog => prog.code?.toUpperCase() === r.programCode.toUpperCase());
+1285: if (newSelectedId !== r.selectedProgramId) {
+1287: return { ...r, selectedProgramId: newSelectedId };
+1294: }, [isLoaded, programs]);
+1296: const handleSaveBothTopics = (programId: string, line1: string, line2: string) => {
+1297: const prog = programs.find(p => p.id === programId);
+1299: showToast('Program not found.', 'error');
+1327: r => r.programId === programId &&
+1339: r => r.programId === programId &&
+1350: programId,
+1376: const handleRegister = (programId: string, studentCode: string, type: 'Stage' | 'Non-Stage', category: ProgramCategory, entryIndex: number = 1) => {
+1389: showToast(`A ${student.category} student cannot participate in a ${category} program.`, 'error');
+1394: if (registrations.some(r => r.programId === programId && r.studentCode.toUpperCase() === student.code.toUpperCase())) {
+1395: showToast('Student is already registered for this program.', 'error');
+1401: const programMap = new Map<string, Program>(programs.map(p => [p.id, p]));
+1406: const p = programMap.get(reg.programId);
+1418: const thisProgram = programs.find(p => p.id === programId);
+1420: if (category === 'General' || thisProgram?.category === 'General') {
+1423: showToast(`Student (${student.name || student.code}) has reached maximum limit for General programs (${generalLimit}).`, 'error');
+1428: maxStage: maxStagePrograms,
+1429: maxNonStage: maxNonStagePrograms,
+1433: showToast(`Student (${student.category}) has reached maximum limit for Stage programs (${studentLimits.maxStage}).`, 'error');
+1437: showToast(`Student (${student.category}) has reached maximum limit for Non-Stage programs (${studentLimits.maxNonStage}).`, 'error');
+1443: const teamLimit = (thisProgram?.category === 'General' && thisProgram?.maxParticipantsPerGroup) ? thisProgram.maxParticipantsPerGroup : 2;
+1445: const thisProgramRegs = registrations.filter(r => r.programId === programId);
+1446: const thisTeamRegs = thisProgramRegs.filter(r => {
+1452: if (thisProgram?.category === 'General') {
+1455: showToast(`Team ${student.team} has already reached the maximum limit (${teamLimit}) for this program.`, 'error');
+1462: programId,
+1481: const saveAndSetPrograms = (updatedList: Program[]) => {
+1482: setPrograms(updatedList);
+1483: persistToFirestore({ programs: updatedList });
+1491: const saveAndSetRegistrations = (updatedList: {id: string, programId: string, studentCode: string}[]) => {
+1496: const handleProgramExcelImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+1511: const newPrograms: Program[] = [];
+1528: let category: ProgramCategory = 'General';
+1571: newPrograms.push({
+1583: if (newPrograms.length > 0) {
+1584: let updatedPrograms = [...programs];
+1585: newPrograms.forEach(np => {
+1586: const existingIdx = updatedPrograms.findIndex(p =>
+1591: updatedPrograms.push(np);
+1593: updatedPrograms[existingIdx] = {
+1594: ...updatedPrograms[existingIdx],
+1595: code: np.code || updatedPrograms[existingIdx].code,
+1605: saveAndSetPrograms(updatedPrograms);
+1606: showToast(`Successfully imported/updated ${newPrograms.length} programs!`, 'success');
+1608: showToast('No valid programs found in the file.', 'error');
+1616: if (programExcelFileInputRef.current) {
+1617: programExcelFileInputRef.current.value = '';
+1621: const handleAddProgram = (e: React.FormEvent) => {
+1623: if (!formProgramName.trim()) {
+1627: if (!formProgramCode.trim()) {
+1631: const newProgram: Program = {
+1633: code: formProgramCode.trim(),
+1634: name: formProgramName.trim(),
+1635: type: formProgramType,
+1636: category: formProgramCategory,
+1637: isSongEvent: formProgramIsSongEvent,
+1638: ...(formProgramCategory === 'General' && {
+1639: maxParticipantsPerGroup: formProgramMaxParticipants,
+1640: maxEntriesPerTeam: formProgramMaxEntries
+1643: saveAndSetPrograms([...programs, newProgram]);
+1644: setFormProgramName('');
+1645: setFormProgramCode('');
+1646: setFormProgramMaxParticipants(5);
+1647: setFormProgramMaxEntries(1);
+1648: setFormProgramIsSongEvent(false);
+1652: const handleScheduleProgramInputChange = (val: string) => {
+1653: setScheduleProgramCodeInput(val);
+1656: setScheduleSelectedProgramId('');
+1663: const prog = programs.find(p =>
+1672: setScheduleSelectedProgramId(prog.id);
+1677: setScheduleSelectedProgramId('');
+1683: if (!scheduleSelectedProgramId) {
+1684: showToast('Please enter a valid Program Code or Name to schedule', 'error');
+1687: const updatedPrograms = programs.map(p => {
+1688: if (p.id === scheduleSelectedProgramId) {
+1698: saveAndSetPrograms(updatedPrograms);
+1699: showToast('Program schedule updated successfully!', 'success');
+1702: const handleDeleteProgram = (id: string) => {
+1703: const progToDelete = programs.find(p => p.id === id);
+1706: // 1. Remove program from programs list
+1707: const updatedPrograms = programs.filter(p => p.id !== id);
+1708: saveAndSetPrograms(updatedPrograms);
+1710: // 2. Remove all registrations associated with this program
+1711: const updatedRegs = registrations.filter(r => r.programId !== id);
+1716: // 3. Remove all song registrations associated with this program
+1717: const updatedSongRegs = songRegistrations.filter(r => r.programId !== id);
+1722: // 4. Clean up results & points associated with this program from all students
+1724: const hasResult = st.programResults?.some(r => {
+1725: if (r.programId) return r.programId === id;
+1726: return r.programName === progToDelete.name && (st.category === progToDelete.category || progToDelete.category === 'General' || st.category === 'General');
+1730: const filteredResults = (st.programResults || []).filter(r => {
+1731: if (r.programId) return r.programId !== id;
+1732: return !(r.programName === progToDelete.name && (st.category === progToDelete.category || progToDelete.category === 'General' || st.category === 'General'));
+1740: programResults: filteredResults,
+1749: showToast(`Program "${progToDelete.name}" deleted along with registrations & results`, 'success');
+1765: if (!student.programResults || student.programResults.length === 0) {
+1767: const prog = programs.find(p => p.name === student.event);
+1773: return student.programResults.reduce((sum, r) => {
+1774: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === student.category || p.category === 'General' || student.category === 'General'));
+1776: return sum; // Do not add missing or General program points to individual personal score
+1796: if (!s.programResults) return sum;
+1797: const genPts = s.programResults.reduce((rSum, r) => {
+1798: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+1817: if (!s.programResults || s.programResults.length === 0) return sum;
+1818: return sum + s.programResults.reduce((rSum, r) => {
+1819: const prog = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+1840: setActiveTab('program');
+1900: const prog = programs.find(p => p.name === prefillEvent);
+1902: setResultPublishProgramId(prog.id);
+1915: setResultPublishProgramId('');
+1947: setResultPublishProgramId('');
+1986: let category: ProgramCategory = 'General';
+2008: programResults: []
+2080: programResults: existingStudent?.programResults || []
+2118: const selectedProgram = programs.find(p => p.id === resultPublishProgramId);
+2119: if (!selectedProgram) {
+2120: showToast('Invalid Program Code', 'error');
+2136: const progRegs = registrations.filter(r => r.programId === selectedProgram.id);
+2139: ...students.filter(s => s.event === selectedProgram.name && (s.category === selectedProgram.category || selectedProgram.category === 'General' || s.category === 'General')).map(s => s.code.toUpperCase())
+2142: if (selectedProgram.category === 'General') {
+2168: showToast(`Student ${student.name} (${entry.code}) is NOT registered for ${selectedProgram.name}!`, 'error');
+2183: if (selectedProgram.category === 'General') {
+2194: programResults: []
+2202: const pts = calculatePoints(selectedProgram.category, entry.rank, entry.grade);
+2204: programId: selectedProgram.id,
+2205: programName: selectedProgram.name,
+2211: const existingResults = targetRecord.programResults || [];
+2213: if (r.programId) return r.programId !== selectedProgram.id;
+2214: return !(r.programName === selectedProgram.name && (targetCategory === selectedProgram.category || selectedProgram.category === 'General' || targetCategory === 'General'));
+2223: programResults: filteredResults,
+2225: ...(targetRecord.event === selectedProgram.name ? { event: '', rank: 0, grade: '' } : {})
+2230: const hasResult = st.programResults?.some(r => {
+2231: if (r.programId) return r.programId === selectedProgram.id;
+2232: return r.programName === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General');
+2233: }) || (st.event === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General'));
+2235: const filtered = (st.programResults || []).filter(r => {
+2236: if (r.programId) return r.programId !== selectedProgram.id;
+2237: return !(r.programName === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General'));
+2242: programResults: filtered,
+2244: ...(st.event === selectedProgram.name ? { rank: 0, grade: '' } : {})
+2254: const [confirmDeleteProgramId, setConfirmDeleteProgramId] = useState<string | null>(null);
+2257: const handleDeleteSingleResult = (studentCode: string, programName: string) => {
+2258: const id = `${studentCode}_${programName}`;
+2268: const filtered = (st.programResults || []).filter(r => r.programName !== programName);
+2272: programResults: filtered,
+2274: ...(st.event === programName ? { rank: 0, grade: '' } : {})
+2283: const handleDeleteProgramResults = () => {
+2284: const selectedProgram = programs.find(p => p.id === resultPublishProgramId);
+2285: if (!selectedProgram) {
+2286: showToast('Invalid Program Code', 'error');
+2290: if (confirmDeleteProgramId !== selectedProgram.id) {
+2291: setConfirmDeleteProgramId(selectedProgram.id);
+2292: setTimeout(() => setConfirmDeleteProgramId(null), 3000);
+2297: const hasResult = st.programResults?.some(r => {
+2298: if (r.programId) return r.programId === selectedProgram.id;
+2299: return r.programName === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General');
+2300: }) || (st.event === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General'));
+2302: const filtered = (st.programResults || []).filter(r => {
+2303: if (r.programId) return r.programId !== selectedProgram.id;
+2304: return !(r.programName === selectedProgram.name && (st.category === selectedProgram.category || selectedProgram.category === 'General' || st.category === 'General'));
+2309: programResults: filtered,
+2311: ...(st.event === selectedProgram.name ? { rank: 0, grade: '' } : {})
+2317: const updatedPrograms = programs.map(p => p.id === selectedProgram.id ? { ...p, isResultPublished: false, isDashboardPublished: false } : p);
+2320: saveAndSetPrograms(updatedPrograms);
+2322: setConfirmDeleteProgramId(null);
+2323: showToast(`Deleted all results for ${selectedProgram.name}`, 'success');
+2349: programResults: []
+2356: const selectedProgram = programs.find(p => p.name === formEvent.trim());
+2358: const newProgramResult: any = {
+2359: programName: formEvent.trim(),
+2364: if (selectedProgram) {
+2365: newProgramResult.programId = selectedProgram.id;
+2368: const existingResults = existingStudent.programResults || [];
+2369: const existingIndex = existingResults.findIndex(r => (r.programId && selectedProgram ? r.programId === selectedProgram.id : r.programName === formEvent.trim()));
+2374: newResultsList[existingIndex] = newProgramResult;
+2376: newResultsList = [...existingResults, newProgramResult];
+2384: programResults: newResultsList,
+2481: const eventIdx = getIdx(['event', 'program', 'item']);
+2530: programResults: []
+2554: programResults: existing.programResults
+2616: const handleClearAllPrograms = () => {
+2617: setClearConfirmState({ isOpen: true, action: 'clearPrograms', password: '', error: '' });
+2641: programResults: []
+2643: const updatedPrograms = programs.map(p => ({
+2649: saveAndSetPrograms(updatedPrograms);
+2659: } else if (clearConfirmState.action === 'clearPrograms') {
+2660: saveAndSetPrograms([]);
+2662: showToast('All program data cleared.', 'success');
+2900: const map: Record<string, {id: string, programId: string, studentCode: string}[]> = {};
+2909: const programsMap = useMemo(() => {
+2910: const byId = new Map<string, Program>();
+2911: const byNameCat = new Map<string, Program>();
+2912: programs.forEach(p => {
+2917: }, [programs]);
+2943: // Calculate available programs for the result publishing form
+2946: const existingProgramIds = existingStudentCalc?.programResults?.map(r => r.programId).filter(Boolean) as string[] || [];
+2947: const existingProgramNames = existingStudentCalc?.programResults?.filter(r => !r.programId).map(r => r.programName) || [];
+2950: const globalProgramsData = useMemo(() => {
+2953: regCount[r.programId] = (regCount[r.programId] || 0) + 1;
+2958: if (s.programResults) {
+2959: s.programResults.forEach(r => {
+2961: const progObj = r.programId ? programs.find(p => p.id === r.programId) : programs.find(p => p.name === r.programName && (p.category === s.category || p.category === 'General' || s.category === 'General'));
+2962: const targetProgId = progObj?.id || r.programId;
+2981: // Also build a set of published program ids & names globally
+2982: const publishedProgramIds = new Set<string>();
+2983: const publishedProgramNames = new Set<string>();
+2985: st.programResults?.forEach(r => {
+2987: if (r.programId) publishedProgramIds.add(r.programId);
+2988: else publishedProgramNames.add(r.programName);
+2992: publishedProgramNames.add(st.event);
+2996: return { regCount, progScorers, publishedProgramIds, publishedProgramNames };
+3000: let availablePrograms: Program[] = [];
+3007: const registeredProgramIds = Array.from(new Set(teamRegs.map(r => r.programId)));
+3008: availablePrograms = programs.filter(p => p.category === 'General' && registeredProgramIds.includes(p.id) && (!(existingProgramIds.includes(p.id) || existingProgramNames.includes(p.name)) || p.name === formEvent));
+3011: const registeredProgramIds = studentRegs.map(r => r.programId);
+3012: availablePrograms = programs.filter(p => p.category === formResultCategory && registeredProgramIds.includes(p.id) && (!(existingProgramIds.includes(p.id) || existingProgramNames.includes(p.name)) || p.name === formEvent));
+3210: onClick={() => setIsProgramsListModalOpen(true)}
+3214: <span>Programs</span>
+3222: <span>Program Schedule</span>
+3254: onClick={() => setIsTeamProgramRegistrationOpen(true)}
+3258: <span>Program Registration</span>
+3338: { id: 'program_details', label: 'Programs & Registrations' },
+3341: { id: 'all_programs', label: 'All Programs' },
+3487: <label className="text-xs font-bold text-amber-400 block mb-1">Select Program</label>
+3496: if (e.target.value === '') setResultPublishProgramId('');
+3506: setResultPublishProgramId('');
+3518: {programs.filter(p => {
+3525: setResultPublishProgramId(p.id);
+3529: className={`px-4 py-2 text-sm cursor-pointer hover:bg-stone-800 transition-colors ${resultPublishProgramId === p.id ? 'bg-amber-500/10 text-amber-300 font-bold' : 'text-amber-100'}`}
+3535: {programs.filter(p => {
+3539: <div className="px-4 py-3 text-sm text-stone-500 text-center">No programs found</div>
+3546: const prog = programs.find(p => p.id === resultPublishProgramId);
+3548: const progRegs = registrations.filter(r => r.programId === prog.id);
+3566: const updatedPrograms = programs.map(p => p.id === prog.id ? { ...p, isResultPublished: !p.isResultPublished } : p);
+3567: saveAndSetPrograms(updatedPrograms);
+3595: {prog.category === 'General' ? 'Team event / General category. Select a registered team or student below.' : '⚠️ No participants registered for this program yet. Register participants in "Programs & Registrations" tab.'}
+3696: if (st && !isReg) return <p className="text-[10px] text-rose-400 font-medium">✕ Student {st.name} is NOT registered for this program!</p>;
+3722: onClick={handleDeleteProgramResults}
+3723: className={`flex-1 py-3 font-black rounded-xl transition-colors shadow-md text-sm border cursor-pointer ${confirmDeleteProgramId === resultPublishProgramId ? 'bg-rose-600 text-white border-rose-500' : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'}`}
+3725: {confirmDeleteProgramId === resultPublishProgramId ? 'Click to Confirm' : 'Delete Result'}
+3742: )}                      {adminTab === 'program_details' && (
+3749: Programs & Registrations
+3751: <p className="text-amber-500/70 text-sm">Manage programs, program limits, and register students.</p>
+3756: {/* Top Section: Program Limits & Add Program */}
+3791: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3811: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3829: persistToFirestore({ categoryLimits: updated, maxStagePrograms: updated['Senior']?.maxStage ?? 3, maxNonStagePrograms: updated['Senior']?.maxNonStage ?? 3 });
+3840: <p className="text-[11px] text-amber-300 font-medium">Team Limit: Max 2 students per team per program (General category can be configured during program creation).</p>
+3845: {/* Add Program */}
+3848: <h5 className="font-bold text-amber-400">Add New Program</h5>
+3852: if (programExcelFileInputRef.current) {
+3853: programExcelFileInputRef.current.value = '';
+3854: programExcelFileInputRef.current.click();
+3864: ref={programExcelFileInputRef}
+3866: onChange={handleProgramExcelImport}
+3870: <form onSubmit={handleAddProgram} className="space-y-4">
+3873: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Code</label>
+3878: value={formProgramCode}
+3879: onChange={(e) => setFormProgramCode(e.target.value)}
+3884: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Name</label>
+3889: value={formProgramName}
+3890: onChange={(e) => setFormProgramName(e.target.value)}
+3900: <label key={cat} className={`flex items-center justify-center text-center p-2 rounded-lg border cursor-pointer transition-colors ${formProgramCategory === cat ? 'bg-amber-500/20 border-amber-500 text-stone-400' : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-amber-500/50'}`}>
+3903: name="programCategorySelection"
+3905: checked={formProgramCategory === cat}
+3906: onChange={(e) => setFormProgramCategory(e.target.value as 'Sub Junior' | 'Senior' | 'Super Senior' | 'General')}
+3915: <label className="text-xs font-bold text-amber-400/80 block mb-1">Program Type</label>
+3918: <label key={type} className={`flex items-center justify-center text-center p-2 rounded-lg border cursor-pointer transition-colors ${formProgramType === type ? 'bg-amber-500/20 border-amber-500 text-stone-400' : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-amber-500/50'}`}>
+3921: name="programTypeSelection"
+3923: checked={formProgramType === type}
+3924: onChange={(e) => setFormProgramType(e.target.value as 'Stage' | 'Non-Stage')}
+3933: {formProgramCategory === 'General' && (
+3940: value={formProgramMaxParticipants}
+3941: onChange={(e) => setFormProgramMaxParticipants(Number(e.target.value))}
+3950: value={formProgramMaxEntries}
+3951: onChange={(e) => setFormProgramMaxEntries(Number(e.target.value))}
+3962: checked={formProgramIsSongEvent}
+3963: onChange={(e) => setFormProgramIsSongEvent(e.target.checked)}
+3974: Add Program
+3983: <h5 className="font-bold text-amber-300 text-lg">Program List & Registrations</h5>
+3989: value={programSearchQuery}
+3990: onChange={(e) => setProgramSearchQuery(e.target.value)}
+3997: const categoryPrograms = programs.filter(p => {
+3999: if (!programSearchQuery.trim()) return true;
+4000: const searchLower = programSearchQuery.toLowerCase();
+4003: if (categoryPrograms.length === 0) return null;
+4006: <h4 className="text-lg font-black text-amber-300 mb-4 pb-2 border-b border-amber-500/10">{category} Programs</h4>
+4008: {categoryPrograms.map(prog => (
+4047: Reg: {(globalProgramsData.regCount[prog.id] || 0)}/{(prog.category === 'General' && prog.maxParticipantsPerGroup) ? prog.maxParticipantsPerGroup * 5 : 10}
+4050: onClick={() => handleDeleteProgram(prog.id)}
+4052: title="Delete Program"
+4061: const updatedPrograms = programs.map(p => p.id === prog.id ? { ...p, isResultPublished: !p.isResultPublished } : p);
+4062: saveAndSetPrograms(updatedPrograms);
+4074: <ProgramRegistrationForm
+4075: program={prog}
+4088: {programs.length === 0 && (
+4090: No programs added yet. Use the form above to add programs.
+4117: const p = programs.find(pr => pr.id === reg.programId);
+4122: <span className="text-xs font-bold text-stone-300">{p?.name || 'Unknown Program'}</span>
+4148: const progName = p?.name || 'Program';
+4151: `Your topic "${reg.songLine}" registered by team ${reg.team} for program "${progName}" has been rejected. Please submit a new topic.`,
+4407: <h4 className="text-sm font-bold text-amber-300">Program Scheduling</h4>
+4412: <label className="text-xs font-bold text-amber-400 block">Type Program Code or Name</label>
+4416: list="schedule-program-datalist"
+4417: value={scheduleProgramCodeInput}
+4418: onChange={(e) => handleScheduleProgramInputChange(e.target.value)}
+4419: placeholder="Type Program Code (e.g. P001, P002) or Name..."
+4422: <datalist id="schedule-program-datalist">
+4423: {programs.map(p => (
+4431: {/* Matched program feedback */}
+4433: if (!scheduleProgramCodeInput.trim()) return null;
+4434: const matchedProg = programs.find(p => p.id === scheduleSelectedProgramId);
+4442: setScheduleProgramCodeInput('');
+4443: setScheduleSelectedProgramId('');
+4457: ⚠️ Program not found. Type a valid Program Code (e.g. P001, P002) or Name.
+4464: const selectedProg = programs.find(p => p.id === scheduleSelectedProgramId);
+4569: onClick={handleClearAllPrograms}
+4573: <span>Clear All Programs</span>
+4629: simPublishedProgramIds.forEach(progId => {
+4630: if (programTeamPoints[progId] && programTeamPoints[progId][team]) {
+4631: simulatedPoints += programTeamPoints[progId][team];
+4682: <th className="px-4 py-3 rounded-tl-xl w-32">Program Code</th>
+4683: <th className="px-4 py-3">Program Name</th>
+4691: const selectedProg = programs.find(p => p.id === row.selectedProgramId);
+4693: // Calculate Team Points for this program
+4694: const teamPoints = selectedProg ? (programTeamPoints[selectedProg.id] || {}) : {};
+4701: value={row.programCode}
+4706: const matchedProg = programs.find(p => p.code?.toUpperCase() === code);
+4707: const oldProgId = row.selectedProgramId;
+4711: saveAndSetPrintProgramIds(prev => prev.filter(id => id !== oldProgId));
+4716: ? { ...r, programCode: code, selectedProgramId: newProgId }
+4744: const isSimPublished = simPublishedProgramIds.includes(selectedProg.id);
+4746: saveAndSetSimPublishedProgramIds(prev => prev.filter(id => id !== selectedProg.id));
+4748: saveAndSetSimPublishedProgramIds(prev => [...prev, selectedProg.id]);
+4755: : (selectedProg && simPublishedProgramIds.includes(selectedProg.id))
+4760: {(selectedProg && simPublishedProgramIds.includes(selectedProg.id)) ? 'Unpublish' : 'Publish'}
+4765: const isPrintingOn = selectedProg ? printProgramIds.includes(selectedProg.id) : false;
+4772: saveAndSetPrintProgramIds(prev => prev.filter(id => id !== selectedProg.id));
+4774: saveAndSetPrintProgramIds(prev => [...prev, selectedProg.id]);
+4811: View and manage all programs that are currently published or set for printing across the site.
+4814: {simPublishedProgramIds.length === 0 && printProgramIds.length === 0 ? (
+4816: No programs are currently published or active for printing.
+4820: {/* Published Programs */}
+4825: Published Programs ({simPublishedProgramIds.length})
+4827: {simPublishedProgramIds.length > 0 && (
+4829: onClick={() => saveAndSetSimPublishedProgramIds([])}
+4836: {simPublishedProgramIds.length === 0 ? (
+4837: <p className="text-xs text-stone-500 italic">No published programs</p>
+4840: {simPublishedProgramIds.map(id => {
+4841: const p = programs.find(prog => prog.id === id);
+4847: onClick={() => saveAndSetSimPublishedProgramIds(prev => prev.filter(pid => pid !== id))}
+4860: {/* Printing Enabled Programs */}
+4865: Printing Enabled Programs ({printProgramIds.length})
+4867: {printProgramIds.length > 0 && (
+4869: onClick={() => saveAndSetPrintProgramIds([])}
+4876: {printProgramIds.length === 0 ? (
+4877: <p className="text-xs text-stone-500 italic">No programs enabled for printing</p>
+4880: {printProgramIds.map(id => {
+4881: const p = programs.find(prog => prog.id === id);
+4887: onClick={() => saveAndSetPrintProgramIds(prev => prev.filter(pid => pid !== id))}
+4912: <label className="font-bold text-sm">Select Program to Add:</label>
+4918: const found = programs.find(p => p.code?.toUpperCase() === typedCode);
+4920: setPrintProgramId(found.id);
+4926: value={printProgramId}
+4927: onChange={(e) => setPrintProgramId(e.target.value)}
+4930: <option value="">-- Select a Program --</option>
+4931: {programs.map(p => (
+4937: if (printProgramId && !printProgramIds.includes(printProgramId)) {
+4938: saveAndSetPrintProgramIds([...printProgramIds, printProgramId]);
+4939: setPrintProgramId('');
+4942: disabled={!printProgramId}
+4955: const allIds = programs.map(p => p.id);
+4956: saveAndSetPrintProgramIds(allIds);
+4960: + Add All Programs ({programs.length})
+4962: {Array.from(new Set(programs.map(p => p.category))).map(cat => {
+4964: const catProgs = programs.filter(p => p.category === cat);
+4972: const updated = Array.from(new Set([...printProgramIds, ...catIds]));
+4973: saveAndSetPrintProgramIds(updated);
+4981: {printProgramIds.length > 0 && (
+4984: onClick={() => saveAndSetPrintProgramIds([])}
+4987: Clear Selected ({printProgramIds.length})
+4992: {/* Selected Programs List */}
+4993: {printProgramIds.length > 0 && (
+4995: {printProgramIds.map(id => {
+4996: const p = programs.find(prog => prog.id === id);
+5002: onClick={() => saveAndSetPrintProgramIds(printProgramIds.filter(pid => pid !== id))}
+5025: disabled={printProgramIds.length === 0}
+5032: if (printProgramIds.length === 0) return;
+5038: const programChunks = [];
+5039: for (let i = 0; i < printProgramIds.length; i += 5) {
+5040: programChunks.push(printProgramIds.slice(i, i + 5));
+5043: programChunks.forEach((chunk, pageIndex) => {
+5056: const prog = programs.find(p => p.id === pid);
+5059: const winners = (globalProgramsData.progScorers[prog.id] || []).map(sc => ({
+5078: const title = `Program: ${prog.code ? `[${cleanPDFText(prog.code)}] ` : ''}${cleanPDFText(prog.name)}`;
+5120: doc.text('No results found for this program.', 148, currentY + 3, { align: 'center' });
+5135: disabled={printProgramIds.length === 0}
+5155: simPublishedProgramIds.forEach(progId => {
+5156: if (programTeamPoints[progId] && programTeamPoints[progId][team]) {
+5157: simulatedPoints += programTeamPoints[progId][team];
+5397: {programs.length > 0 && (
+5400: const getProgramRegisteredStudents = (progId: string) => {
+5401: const prog = programs.find(p => p.id === progId);
+5403: const progRegs = registrations.filter(r => r.programId === prog.id);
+5412: const downloadRegistrationPaperPDF = (progsToPrint: Program[]) => {
+5436: const regStudents = getProgramRegisteredStudents(prog.id);
+5513: downloadRegistrationPaperPDF(programs);
+5524: <label className="font-bold text-sm text-stone-700">Search Program Code / Name:</label>
+5532: const found = programs.find(p => p.code?.toUpperCase() === val.trim().toUpperCase());
+5534: setRegPaperSelectedProgramId(found.id);
+5535: } else if (regPaperSelectedProgramId) {
+5536: setRegPaperSelectedProgramId('');
+5543: value={regPaperSelectedProgramId}
+5545: setRegPaperSelectedProgramId(e.target.value);
+5546: const p = programs.find(item => item.id === e.target.value);
+5553: <option value="">-- Select a Program --</option>
+5554: {programs.map(p => (
+5559: {(regPaperSearchQuery || regPaperSelectedProgramId) && (
+5563: setRegPaperSelectedProgramId('');
+5572: {/* Display Searched / Selected Program(s) */}
+5574: const getProgramRegisteredStudents = (progId: string) => {
+5575: const prog = programs.find(p => p.id === progId);
+5577: const progRegs = registrations.filter(r => r.programId === prog.id);
+5586: const downloadRegistrationPaperPDF = (progsToPrint: Program[]) => {
+5610: const regStudents = getProgramRegisteredStudents(prog.id);
+5690: let matchingPrograms: Program[] = [];
+5691: if (regPaperSelectedProgramId) {
+5692: const p = programs.find(item => item.id === regPaperSelectedProgramId);
+5693: if (p) matchingPrograms = [p];
+5696: matchingPrograms = programs.filter(p => p.code?.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+5699: if (matchingPrograms.length === 0) {
+5702: Type a program code or select a program above to view its Registration Paper & chess numbers.
+5709: {matchingPrograms.map(prog => {
+5710: const regStudents = getProgramRegisteredStudents(prog.id);
+5713: {/* Header with Program Code and Name */}
+5743: <div className="text-xs text-stone-400 italic">No registered students found for this program.</div>
+5770: {printProgramIds.length > 0 && (
+5773: const programChunks = [];
+5774: for (let i = 0; i < printProgramIds.length; i += 5) {
+5775: programChunks.push(printProgramIds.slice(i, i + 5));
+5778: return programChunks.map((chunk, pageIndex) => (
+5788: const prog = programs.find(p => p.id === pid);
+5791: const winners = (globalProgramsData.progScorers[prog.id] || []).map(sc => ({
+5812: <h3 className="text-2xl font-bold">Program: <span className="font-extrabold">{prog.code ? `[${prog.code}] ` : ''}{prog.name}</span></h3>
+5850: <div className="text-center font-bold text-gray-500 py-6 print:hidden">No results found for this program.</div>
+5860: <div>Page {pageIndex + 1} of {programChunks.length}</div>
+5870: {adminTab === 'all_programs' && (
+5874: <List className="w-5 h-5" /> All Programs Overview
+5880: value={adminAllProgramsSearchQuery}
+5881: onChange={(e) => setAdminAllProgramsSearchQuery(e.target.value)}
+5892: <th className="p-3 font-bold">Program Name</th>
+5902: {programs.filter(prog =>
+5903: !adminAllProgramsSearchQuery ||
+5904: prog.name.toLowerCase().includes(adminAllProgramsSearchQuery.toLowerCase()) ||
+5905: (prog.code && prog.code.toLowerCase().includes(adminAllProgramsSearchQuery.toLowerCase()))
+5907: const participantsCount = globalProgramsData.regCount[prog.id] || 0;
+5908: const scorers = globalProgramsData.progScorers[prog.id] || [];
+5944: const updatedPrograms = programs.map(p => p.id === prog.id ? { ...p, isResultPublished: nextState, isDashboardPublished: nextState } : p);
+5945: saveAndSetPrograms(updatedPrograms);
+6008: const { publishedProgramIds, publishedProgramNames } = globalProgramsData;
+6043: <th className="p-3" colSpan={2}>Programs & Results</th>
+6064: const registeredProgramNames = stRegs.map(reg => programs.find(p => p.id === reg.programId)?.name).filter(Boolean);
+6065: const resultNames = s.programResults?.map(r => r.programName) || [];
+6067: // Top level result if exists and not in programResults
+6072: const allEvents = Array.from(new Set([...registeredProgramNames, ...resultNames])) as string[];
+6075: return <span className="text-stone-600 text-[10px] italic">No programs</span>;
+6081: let result = s.programResults?.find(r => r.programName === eventName);
+6084: result = { programName: s.event, rank: s.rank, grade: s.grade, points: s.points };
+6087: const progObj = programs.find(p => p.name === eventName);
+6090: const teamRes = teamDummy?.programResults?.find(r => r.programName === eventName || r.programId === progObj.id);
+6098: let progId = result?.programId;
+6100: const reg = stRegs.find(r => programs.find(p => p.id === r.programId)?.name === eventName);
+6102: progId = reg.programId;
+6104: const prog = programs.find(p => p.name === eventName && (p.category === s.category || p.category === 'General'));
+6109: const p = programs.find(p => p.id === progId);
+6115: const p2 = programs.find(p => p.name === eventName && (p.category === s.category || p.category === 'General'));
+6428: {/* Tab 4: All Results Program Search */}
+6430: id="tab-program-btn"
+6431: onClick={() => setActiveTab('program')}
+6433: activeTab === 'program'
+6438: <SearchCode className={`w-4 h-4 sm:w-5 sm:h-5 mb-1 shrink-0 transition-colors ${activeTab === 'program' ? 'text-amber-950' : 'text-amber-500/70'}`} />
+6556: {activeTab === 'program' && (
+6560: {/* Search Type Selector (Student View vs Program Table View) */}
+6563: <h3 className="text-xl font-black text-amber-300">Search Results & Program Tables</h3>
+6564: <p className="text-sm text-amber-500/60">Search student individual results or view full program result tables</p>
+6579: onClick={() => setPublicSearchView('program')}
+6581: publicSearchView === 'program'
+6586: <FileText className="w-4 h-4" /> Program Result Table
+6611: const registeredPrograms = studentRegs
+6612: .map(reg => programsMap.byId.get(reg.programId))
+6613: .filter(Boolean) as Program[];
+6615: const displayPrograms: { id: string, code?: string, name: string, type: string, category: string, result: any, isRegistered: boolean }[] = [];
+6618: registeredPrograms.forEach(p => {
+6621: let res = student.programResults?.find(r => r.programId ? r.programId === p.id : (r.programName === p.name && (student.category === p.category || p.category === 'General')));
+6624: const teamRes = teamDummy?.programResults?.find(r => r.programId === p.id || r.programName === p.name);
+6629: displayPrograms.push({
+6641: (student.programResults || []).forEach(r => {
+6642: if (!seenNames.has(r.programName)) {
+6643: seenNames.add(r.programName);
+6644: const p = r.programId ? programsMap.byId.get(r.programId) : (programsMap.byNameCat.get(`${r.programName}___${student.category}`) || programsMap.byNameCat.get(`${r.programName}___General`));
+6646: displayPrograms.push({
+6649: name: r.programName,
+6693: {/* Programs List */}
+6697: Participated Programs ({displayPrograms.length})
+6699: {displayPrograms.length > 0 ? (
+6701: {displayPrograms.map(prog => {
+6733: No programs registered yet
+6749: {/* --- VIEW MODE 2: PROGRAM RESULT TABLE VIEW --- */}
+6750: {publicSearchView === 'program' && (
+6753: {/* Search Bar for Program Code / Name */}
+6757: placeholder="Type Program Code (e.g. 101) or Name..."
+6758: value={publicProgramSearchQuery}
+6761: setPublicProgramSearchQuery(val);
+6762: const found = programs.find(p => p.code?.toUpperCase() === val.trim().toUpperCase());
+6764: setPublicSelectedProgramId(found.id);
+6765: } else if (publicSelectedProgramId) {
+6766: setPublicSelectedProgramId('');
+6777: value={publicSelectedProgramId}
+6779: setPublicSelectedProgramId(e.target.value);
+6780: const p = programs.find(item => item.id === e.target.value);
+6782: setPublicProgramSearchQuery(p.code);
+6787: <option value="">-- Select a Program --</option>
+6788: {programs.map(p => (
+6795: {(publicProgramSearchQuery || publicSelectedProgramId) && (
+6798: setPublicProgramSearchQuery('');
+6799: setPublicSelectedProgramId('');
+6809: {/* Program Table Results Area */}
+6811: let matchingPrograms: Program[] = [];
+6812: if (publicSelectedProgramId) {
+6813: const p = programs.find(item => item.id === publicSelectedProgramId);
+6814: if (p) matchingPrograms = [p];
+6815: } else if (publicProgramSearchQuery.trim()) {
+6816: const q = publicProgramSearchQuery.trim().toLowerCase();
+6817: matchingPrograms = programs.filter(p =>
+6822: // Show all published programs by default if no filter
+6823: matchingPrograms = programs.filter(p => p.isResultPublished || p.isDashboardPublished);
+6826: if (matchingPrograms.length === 0) {
+6830: <p className="text-amber-500/60 font-medium">No programs found matching your search.</p>
+6837: {matchingPrograms.map(prog => {
+6838: const winners = (globalProgramsData.progScorers[prog.id] || []).map(sc => ({
+6858: {/* Program Table Header */}
+6940: No published results found for this program yet.
+6997: {clearConfirmState.action === 'clearPrograms' && "Are you sure you want to clear all programs and registrations? This action cannot be undone."}
+6998: {clearConfirmState.action === 'clearResults' && "Are you sure you want to clear all program results? This action cannot be undone."}
+7038: {/* --- TEAM PROGRAM REGISTRATION MODAL --- */}
+7040: {isTeamProgramRegistrationOpen && (
+7048: setIsTeamProgramRegistrationOpen(false);
+7066: setIsTeamProgramRegistrationOpen(false);
+7079: <h3>Program Registration</h3>
+7138: setConvenerProgramCode('');
+7170: const typedProgCode = convenerProgramCode.trim().toUpperCase();
+7171: const activeProg = typedProgCode ? programs.find(pr => pr.code?.toUpperCase() === typedProgCode) : null;
+7177: <label className="text-xs font-bold text-amber-400 block">Program Code</label>
+7180: value={convenerProgramCode}
+7181: onChange={(e) => setConvenerProgramCode(e.target.value.toUpperCase())}
+7262: const p = activeProg || programs.find(pr => pr.code?.toUpperCase() === convenerProgramCode.trim().toUpperCase());
+7263: if (!p) { showToast('Invalid Program Code', 'error'); return; }
+7297: showToast(`Student ${s.name} (${s.category}) cannot participate in ${p.category} program.`, 'error');
+7301: if (updatedRegs.some(r => r.programId === p.id && r.studentCode.toUpperCase() === s.code.toUpperCase())) {
+7307: const programMap = new Map<string, Program>(programs.map(pr => [pr.id, pr]));
+7312: const pr = programMap.get(reg.programId);
+7327: showToast(`Student ${s.name} has reached max General program limit (${generalLimit}).`, 'error');
+7332: maxStage: maxStagePrograms,
+7333: maxNonStage: maxNonStagePrograms,
+7348: const thisProgRegs = updatedRegs.filter(r => r.programId === p.id);
+7361: programId: p.id,
+7383: {/* Display registered programs for this team - FILTERED BY TYPED PROGRAM CODE */}
+7386: const typedCode = convenerProgramCode.trim().toUpperCase();
+7387: const currentProgram = typedCode ? programs.find(p => p.code?.toUpperCase() === typedCode) : null;
+7390: const pr = programs.find(p => p.id === reg.programId);
+7395: if (currentProgram) return item.pr?.id === currentProgram.id;
+7397: return false; // If no program code entered, do not show all
+7405: {currentProgram ? `Registered Students - ${currentProgram.name} [${currentProgram.code}]` : 'Registered Students for Program'}
+7413: <p className="text-xs text-stone-500 italic py-1">Type a Program Code above to view registered students for that program.</p>
+7414: ) : !currentProgram ? (
+7415: <p className="text-xs text-amber-500/70 italic py-1">Program code "{typedCode}" not found.</p>
+7417: <p className="text-xs text-stone-500 italic py-1">No students registered yet for {currentProgram.name} in {teamRegistrationSelectedTeam}.</p>
+7424: <span className="font-mono text-amber-400 font-extrabold">[{pr?.code || 'N/A'}]</span> {pr?.name || 'Program'}
+7445: First-come, first-serve. Enter the Program Code, then enter Topic 1 and Topic 2 for your participants. If another team registers a topic first, it cannot be selected.
+7449: <label className="text-xs font-bold text-amber-400 block">Program Code (Topic Events)</label>
+7452: value={convenerSongProgramCode}
+7453: onChange={(e) => setConvenerSongProgramCode(e.target.value.toUpperCase())}
+7458: const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode);
+7470: const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode);
+7471: const reg1 = songRegistrations.find(r => r.programId === p?.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && (r.entryIndex === 1 || !r.entryIndex));
+7488: const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode);
+7489: const reg2 = songRegistrations.find(r => r.programId === p?.id && r.team === teamRegistrationSelectedTeam && r.status !== 'rejected' && r.entryIndex === 2);
+7506: const p = programs.find(pr => pr.code?.toUpperCase() === convenerSongProgramCode);
+7507: if (!p) { showToast('Invalid Program Code', 'error'); return; }
+7508: if (!p.isSongEvent) { showToast('This program does not require topic registration.', 'error'); return; }
+7521: const p = programs.find(pr => pr.id === r.programId);
+7531: {p?.code ? `[${p.code}] ` : ''}{p?.name || 'Unknown Program'}
+7551: {/* --- PROGRAMS LIST MODAL --- */}
+7553: {isProgramsListModalOpen && (
+7560: onClick={() => setIsProgramsListModalOpen(false)}
+7573: onClick={() => setIsProgramsListModalOpen(false)}
+7580: <h3>Programs List</h3>
+7582: <p className="text-xs text-amber-200/80 mb-4">View and search through all registered programs.</p>
+7587: value={programsSearchQuery}
+7588: onChange={(e) => setProgramsSearchQuery(e.target.value)}
+7598: const query = programsSearchQuery.trim().toLowerCase();
+7599: const filteredPrograms = programs.filter(p =>
+7604: if (filteredPrograms.length === 0) {
+7607: <p className="text-sm">No programs found.</p>
+7612: return filteredPrograms.map((p, index) => (
+7635: {/* --- PROGRAM SCHEDULE MODAL --- */}
+7666: <h3>Program Schedule</h3>
+7683: const scheduledPrograms = programs.filter(p => p.date || p.time);
+7684: const filtered = scheduledPrograms.filter(p =>
+7692: if (scheduledPrograms.length === 0) return null;
+7748: const scheduledPrograms = programs.filter(p => p.date || p.time);
+7749: const filteredPrograms = scheduledPrograms.filter(p =>
+7754: if (scheduledPrograms.length === 0) {
+7758: <p className="text-amber-200/80 font-bold">No programs scheduled yet.</p>
+7764: if (filteredPrograms.length === 0) {
+7767: <p className="text-sm">No scheduled programs found matching your search.</p>
+7772: const sortByDateTime = (a: Program, b: Program) => {
+7781: const stage1Programs = filteredPrograms
+7785: const stage2Programs = filteredPrograms
+7789: const nonStagePrograms = filteredPrograms
+7793: const renderCard = (p: Program) => {
+7856: {stage1Programs.length} Programs
+7859: {stage1Programs.length > 0 ? (
+7861: {stage1Programs.map(renderCard)}
+7865: No programs scheduled on Stage 1 yet.
+7880: {stage2Programs.length} Programs
+7883: {stage2Programs.length > 0 ? (
+7885: {stage2Programs.map(renderCard)}
+7889: No programs scheduled on Stage 2 yet.
+7904: {nonStagePrograms.length} Programs
+7907: {nonStagePrograms.length > 0 ? (
+7909: {nonStagePrograms.map(renderCard)}
+7913: No Non-Stage programs scheduled yet.
