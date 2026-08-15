@@ -49,7 +49,7 @@ import {
   Flame,
   LogOut,
   Activity, FileText, Copy, List,
-  Tv, Play, Pause, SkipForward, SkipBack, X, Maximize2, Minimize2, Radio, Crown, Zap, MoreVertical, Bell, BellRing, Send, CheckCheck, Megaphone, ShieldCheck
+  Tv, Play, Pause, SkipForward, SkipBack, X, Maximize2, Minimize2, Radio, Crown, Zap, MoreVertical, Bell, BellRing, Send, CheckCheck, Megaphone, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { StudentResult, TeamName, CategoryName, TEAMS, CATEGORIES, TEAM_CODES, TEAM_RANGES, TEAM_MALAYALAM, CATEGORY_MALAYALAM, Program, ProgramCategory, normalizeTeamName, getTeamFromChestNumber, getNextChestNumberForTeam } from './types';
@@ -345,6 +345,12 @@ export default function App() {
   });
   const [tempTeamPasswords, setTempTeamPasswords] = useState<Record<string, string>>({
     'Aqeeq': '', 'Tawbaz': '', 'Marjan': '', 'Fyruz': '', 'Yaqoot': ''
+  });
+  const [teamPenalties, setTeamPenalties] = useState<Record<TeamName, number>>({
+    Yaqoot: 0, Aqeeq: 0, Tawbaz: 0, Fyruz: 0, Marjan: 0
+  });
+  const [tempTeamPenalties, setTempTeamPenalties] = useState<Record<TeamName, number>>({
+    Yaqoot: 0, Aqeeq: 0, Tawbaz: 0, Fyruz: 0, Marjan: 0
   });
   const [showTeamPasswords, setShowTeamPasswords] = useState<Record<string, boolean>>({});
   const [showSystemPassword, setShowSystemPassword] = useState(false);
@@ -876,6 +882,17 @@ export default function App() {
         if (data.teamPasswords) {
           setTeamPasswords(data.teamPasswords);
           setTempTeamPasswords(data.teamPasswords);
+        }
+        if (data.teamPenalties) {
+          const sanitizedPenalties: Record<TeamName, number> = {
+            Yaqoot: Number(data.teamPenalties.Yaqoot) || 0,
+            Aqeeq: Number(data.teamPenalties.Aqeeq) || 0,
+            Tawbaz: Number(data.teamPenalties.Tawbaz) || 0,
+            Fyruz: Number(data.teamPenalties.Fyruz) || 0,
+            Marjan: Number(data.teamPenalties.Marjan) || 0,
+          };
+          setTeamPenalties(sanitizedPenalties);
+          setTempTeamPenalties(sanitizedPenalties);
         }
         if (data.categoryLimits) {
           setCategoryLimits(data.categoryLimits);
@@ -1838,7 +1855,11 @@ export default function App() {
     }, 0);
   };
 
-  const getTeamScore = (team: TeamName, context: PublishContext = 'admin'): number => {
+  const getTeamPenalty = (team: TeamName): number => {
+    return Number(teamPenalties[team]) || 0;
+  };
+
+  const getTeamGrossScore = (team: TeamName, context: PublishContext = 'admin'): number => {
     return students
       .filter(s => s.team.toLowerCase() === team.toLowerCase())
       .reduce((sum, s) => {
@@ -1857,6 +1878,12 @@ export default function App() {
         }
         return sum + calculateStudentPoints(s, context);
       }, 0);
+  };
+
+  const getTeamScore = (team: TeamName, context: PublishContext = 'admin'): number => {
+    const gross = getTeamGrossScore(team, context);
+    const penalty = getTeamPenalty(team);
+    return gross - penalty;
   };
 
   const getCategoryRank = (team: TeamName, category: CategoryName, context: PublishContext = 'admin'): number => {
@@ -2702,6 +2729,10 @@ export default function App() {
       saveAndSetStudents(INITIAL_STUDENTS);
       saveAndSetRegistrations([]);
       saveAndSetSongRegistrations([]);
+      const zeroPenalties: Record<TeamName, number> = { Yaqoot: 0, Aqeeq: 0, Tawbaz: 0, Fyruz: 0, Marjan: 0 };
+      setTeamPenalties(zeroPenalties);
+      setTempTeamPenalties(zeroPenalties);
+      persistToFirestore({ teamPenalties: zeroPenalties });
       showToast('Successfully reset to initial data.', 'success');
       resetForm();
     } else if (clearConfirmState.action === 'clearStudents') {
@@ -4590,6 +4621,147 @@ export default function App() {
                                 </button>
                               </div>
                             </div>
+
+                            {/* Discipline Penalty / Negative Points Controls */}
+                            <div className="space-y-4 pt-4 border-t border-amber-500/10">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-2 text-amber-300 font-bold">
+                                  <ShieldAlert className="w-5 h-5 text-rose-400" />
+                                  <h4 className="text-sm font-bold text-amber-300">Team Discipline Penalties</h4>
+                                </div>
+                                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/30">
+                                  Deducted from Team Totals
+                                </span>
+                              </div>
+                              <p className="text-xs text-stone-400 leading-relaxed">
+                                Record penalty points for team indiscipline here. These negative points will be deducted directly from the total team scores across the entire system, including All Saved Points on the live dashboard.
+                              </p>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                                {TEAMS.map((team) => {
+                                  const currentPenalty = tempTeamPenalties[team] ?? 0;
+                                  const gross = getTeamGrossScore(team, 'admin');
+                                  const net = gross - currentPenalty;
+
+                                  return (
+                                    <div key={team} className="p-3.5 bg-stone-950/80 border border-amber-500/15 rounded-xl space-y-3 shadow-inner">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                                          {team} <span className="text-[10px] text-stone-400 font-normal">({TEAM_CODES[team]} Series)</span>
+                                        </span>
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded bg-stone-900 border border-stone-800 text-stone-400">
+                                          Gross: {gross} pts
+                                        </span>
+                                      </div>
+
+                                      <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-rose-400 block flex items-center justify-between">
+                                          <span>Penalty Points</span>
+                                          {currentPenalty > 0 && <span className="text-rose-400 font-black">-{currentPenalty} Pts</span>}
+                                        </label>
+                                        <div className="flex items-center gap-1.5">
+                                          <input 
+                                            type="number"
+                                            min="0"
+                                            value={currentPenalty === 0 ? '' : currentPenalty}
+                                            onChange={(e) => {
+                                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                                              const updated = { ...tempTeamPenalties, [team]: val };
+                                              setTempTeamPenalties(updated);
+                                              setTeamPenalties(updated);
+                                              persistToFirestore({ teamPenalties: updated });
+                                            }}
+                                            placeholder="0"
+                                            className="flex-1 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-stone-900 focus:border-rose-400 outline-none text-sm text-rose-300 font-black"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const val = (currentPenalty || 0) + 5;
+                                              const updated = { ...tempTeamPenalties, [team]: val };
+                                              setTempTeamPenalties(updated);
+                                              setTeamPenalties(updated);
+                                              persistToFirestore({ teamPenalties: updated });
+                                              showToast(`${team}: +5 Penalty applied (-${val} pts total)`, 'info');
+                                            }}
+                                            className="px-2 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[10px] font-bold rounded-lg border border-rose-500/30 transition-colors"
+                                            title="Add 5 penalty points"
+                                          >
+                                            +5
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const val = (currentPenalty || 0) + 10;
+                                              const updated = { ...tempTeamPenalties, [team]: val };
+                                              setTempTeamPenalties(updated);
+                                              setTeamPenalties(updated);
+                                              persistToFirestore({ teamPenalties: updated });
+                                              showToast(`${team}: +10 Penalty applied (-${val} pts total)`, 'info');
+                                            }}
+                                            className="px-2 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[10px] font-bold rounded-lg border border-rose-500/30 transition-colors"
+                                            title="Add 10 penalty points"
+                                          >
+                                            +10
+                                          </button>
+                                          {currentPenalty > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const updated = { ...tempTeamPenalties, [team]: 0 };
+                                                setTempTeamPenalties(updated);
+                                                setTeamPenalties(updated);
+                                                persistToFirestore({ teamPenalties: updated });
+                                                showToast(`${team}: Penalty reset to 0`, 'info');
+                                              }}
+                                              className="px-2 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-400 text-[10px] font-bold rounded-lg transition-colors"
+                                              title="Reset penalty to 0"
+                                            >
+                                              Reset
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center justify-between pt-1 border-t border-stone-800/60 text-[11px]">
+                                        <span className="text-stone-400 font-medium">Net Total Points:</span>
+                                        <span className="font-black text-amber-400">{net} Pts</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTeamPenalties(tempTeamPenalties);
+                                    persistToFirestore({ teamPenalties: tempTeamPenalties });
+                                    showToast('Team discipline penalties saved successfully.', 'success');
+                                  }}
+                                  className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                                >
+                                  <Save className="w-4 h-4" />
+                                  Save Discipline Penalties
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const resetAll: Record<TeamName, number> = { Yaqoot: 0, Aqeeq: 0, Tawbaz: 0, Fyruz: 0, Marjan: 0 };
+                                    setTempTeamPenalties(resetAll);
+                                    setTeamPenalties(resetAll);
+                                    persistToFirestore({ teamPenalties: resetAll });
+                                    showToast('All team penalties reset to 0.', 'info');
+                                  }}
+                                  className="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-400 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                                >
+                                  Reset All Penalties
+                                </button>
+                              </div>
+                            </div>
                           </div>
 
                           <div className="pt-4 border-t border-amber-500/10 space-y-4">
@@ -6412,15 +6584,33 @@ export default function App() {
                                     <span className="text-[10px] text-amber-500/60 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full">All Saved Results</span>
                                   </div>
                                   <div className="space-y-2">
-                                    {adminTeamScoringList.map((team, idx) => (
-                                      <div key={team.name} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <span className={`w-4 text-center text-[10px] font-black ${idx === 0 ? 'text-amber-50' : 'text-stone-600'}`}>{idx + 1}</span>
-                                          <span className={`text-sm font-bold ${idx === 0 ? 'text-stone-400' : 'text-stone-400'}`}>{team.name}</span>
+                                    {adminTeamScoringList.map((team, idx) => {
+                                      const gross = getTeamGrossScore(team.name as TeamName, 'admin');
+                                      const penalty = getTeamPenalty(team.name as TeamName);
+                                      return (
+                                        <div key={team.name} className="flex items-center justify-between p-2 rounded-lg bg-stone-900/60 border border-stone-800/80 hover:bg-stone-900 transition-colors">
+                                          <div className="flex items-center gap-2.5">
+                                            <span className={`w-5 text-center text-xs font-black ${idx === 0 ? 'text-amber-400' : 'text-stone-500'}`}>{idx + 1}</span>
+                                            <div>
+                                              <span className={`text-sm font-bold block ${idx === 0 ? 'text-amber-300' : 'text-stone-200'}`}>{team.name}</span>
+                                              {penalty > 0 ? (
+                                                <div className="text-[10px] text-rose-400 font-semibold flex items-center gap-1.5 mt-0.5">
+                                                  <span className="text-stone-400">Gross: {gross}</span>
+                                                  <span>•</span>
+                                                  <span className="text-rose-400 font-bold bg-rose-500/10 px-1 rounded">-{penalty} Penalty</span>
+                                                </div>
+                                              ) : (
+                                                <span className="text-[10px] text-stone-500">{TEAM_CODES[team.name as TeamName]} Series</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="text-right">
+                                            <span className={`text-base font-black ${idx === 0 ? 'text-amber-400' : 'text-amber-100'}`}>{team.score}</span>
+                                            <span className="text-[10px] text-stone-500 block font-bold">pts</span>
+                                          </div>
                                         </div>
-                                        <span className={`text-sm font-black ${idx === 0 ? 'text-amber-400' : 'text-stone-500'}`}>{team.score}</span>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               </div>
@@ -6636,23 +6826,34 @@ export default function App() {
         <div className="px-6 py-6 flex-1 w-full flex flex-col">
           {activeTab === 'total' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 w-full">
-            {publicTeamScoringList.map((item, index) => (
-              <motion.div 
-                key={item.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-stone-900/60 border border-amber-500/20 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-md hover:border-amber-500/40 transition-all h-full"
-              >
-                <div className="font-extrabold text-xl text-amber-50 mb-2">
-                  {item.name}
-                </div>
-                <div className="text-3xl font-black text-amber-300 mb-4 tracking-tight">
-                  {item.score} <span className="text-[12px] font-bold text-amber-500/60 uppercase">pts</span>
-                </div>
-
-              </motion.div>
-            ))}
+            {publicTeamScoringList.map((item, index) => {
+              const penalty = getTeamPenalty(item.name as TeamName);
+              return (
+                <motion.div 
+                  key={item.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-stone-900/60 border border-amber-500/20 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-md hover:border-amber-500/40 transition-all h-full"
+                >
+                  <div className="font-extrabold text-xl text-amber-50 mb-2">
+                    {item.name}
+                  </div>
+                  <div className="text-3xl font-black text-amber-300 mb-2 tracking-tight">
+                    {item.score} <span className="text-[12px] font-bold text-amber-500/60 uppercase">pts</span>
+                  </div>
+                  {penalty > 0 ? (
+                    <div className="text-[10px] text-rose-400 font-bold bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">
+                      -{penalty} Penalty
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-stone-500 font-medium">
+                      {TEAM_CODES[item.name as TeamName]} Series
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
           )}
 
@@ -7368,7 +7569,7 @@ export default function App() {
                               <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-bold mb-2">
                                 <Lock className="w-4 h-4 text-rose-400 shrink-0" />
                                 <span>
-                                  വിദ്യാർത്ഥി രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ വിദ്യാർത്ഥികളെ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല. (നിലവിലെ രജിസ്ട്രേഷനുകൾ താഴെ പ്രോഗ്രാം കോഡ് ടൈപ്പ് ചെയ്ത് കാണാവുന്നതാണ്.)
+                                  Student registration is temporarily deactivated by the Admin. New students cannot be registered at this time. (Existing registrations can be viewed by typing the Programme Code below.)
                                 </span>
                               </div>
                             )}
@@ -7647,7 +7848,7 @@ export default function App() {
                         <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-rose-300 text-xs font-bold my-2">
                           <Lock className="w-4 h-4 text-rose-400 shrink-0" />
                           <span>
-                            ടോപ്പിക്ക് രജിസ്ട്രേഷൻ അഡ്മിൻ താൽക്കാലികമായി ഡിആക്റ്റീവ് ചെയ്തിരിക്കുകയാണ്. പുതിയ ടോപ്പിക്കുകൾ രജിസ്റ്റർ ചെയ്യാൻ സാധിക്കില്ല.
+                            Topic registration is temporarily deactivated by the Admin. New topics cannot be registered at this time.
                           </span>
                         </div>
                       )}
